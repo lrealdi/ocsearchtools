@@ -3,7 +3,6 @@
 if ( NULL == $Params['ObjectID'] )
 {
     echo 'Specificare un object ID';
-    eZExecution::cleanExit();
 }
 else
 {
@@ -38,6 +37,8 @@ else
     {
         echo 'Non esiste oggetto con ID #' . $ObjectID;
     }
-    eZExecution::cleanExit();
 }
+
+eZDisplayDebug();
+eZExecution::cleanExit();
 ?>
