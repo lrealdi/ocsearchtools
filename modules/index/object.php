@@ -31,6 +31,7 @@ else
         echo '</table>';
     
         $result = $searchEngine->addObject( $object, true );            
+        echo '<h2>Risultato indicizzazione: </h2>';
         var_dump( $result );    
     }
     else
