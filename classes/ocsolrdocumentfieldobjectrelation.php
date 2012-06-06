@@ -235,7 +235,8 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
 		}
 		foreach ( $fieldNameArray as $fieldName )
 		{
-		  //eZCLI::instance()->output(var_dump($metaData));
+		  /*
+          //eZCLI::instance()->output(var_dump($metaData));
 		  if ( isset( $metaData[$fieldName] ) )
 		  {
 		      $metaData[$fieldName] = array_merge( $metaData[$fieldName], array( trim( $finalValue, "\t\r\n " ) ) );
@@ -244,6 +245,24 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
 		  {
 		      $metaData[$fieldName] = array( trim( $finalValue, "\t\r\n " ) );
 		  }
+          */
+          
+          $arrayFinalValue = array( trim( $finalValue, "\t\r\n " ) );
+          
+          if ( isset( $metaData[$fieldName] )  )
+          {
+            $merge = array_diff( $metaData[$fieldName], $arrayFinalValue );  
+          }
+          
+          //eZCLI::instance()->output(var_dump($metaData));
+		  if ( isset( $metaData[$fieldName] ) && !empty( $merge ) )
+		  {
+              $metaData[$fieldName] = array_merge( $metaData[$fieldName], $arrayFinalValue );
+		  }
+		  else
+		  {
+		      $metaData[$fieldName] = $arrayFinalValue;
+		  }     
 		
 		}
 
