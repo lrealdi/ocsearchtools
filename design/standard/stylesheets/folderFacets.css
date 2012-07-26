@@ -1,0 +1,32 @@
+.queryContainer
+{
+    position:relative;
+}
+#clearSearch
+{
+    display:block;
+    width:15px;
+    height:15px;
+    background:url(../images/CloseButton.png) no-repeat center;
+    position:absolute;
+    bottom:3px;
+    right:3px;
+    color:transparent;
+    text-align:center;
+    font-size:0.0001em;
+    line-height:14px;
+    cursor:pointer;
+}
+div#sidemenu ul li div a.helper
+{
+    padding:0;
+    float:left;
+    width:15px;
+    height:15px;
+    background:url( ../images/CloseButton.png ) no-repeat left center;
+    padding:4px 4px 4px 0;
+}
+div#sidemenu ul li div a.helper small
+{
+    display:none;
+}
