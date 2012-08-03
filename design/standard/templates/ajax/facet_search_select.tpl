@@ -48,7 +48,8 @@
 {if and ( $facets|count(), is_set( $search_extras.facet_fields ) )}
     {foreach $search_extras.facet_fields as $key => $facet}
         {def $name = $facets.$key.name|urlencode()}
-        <ul class="menu-list">    
+        <ul class="menu-list">
+        {if $facet.nameList|count()|gt(0)}
             <li><div><strong>{$facets.$key.name|explode( '_' )|implode( ' ' )|wash()}</strong></div>                
                 <ul class="submenu-list">
                     {foreach $facet.nameList as $clean => $dash }
@@ -60,7 +61,7 @@
                         {foreach $view_parameters as $key2 => $value}
                             {if and( $value|ne(''), $key2|ne( $name ), $key2|ne( 'offset' ) )}
                                 {set $uristring = concat( $uristring, '/(' , $key2, ')/', $value )}
-                            {elseif and( $value|ne(''), $key2|eq( $name ) )}
+                            {elseif and( $value|ne(''), $key2|eq( $name ), $value|eq( $dash ) )}
                                 {set $style = $style|append( 'current')
                                      $current = true()}
                             {/if}
@@ -78,7 +79,20 @@
                                     <a class="helper" href={concat( $node.url_alias, $uristring )|ezurl()} title="Rimuovi filtro"><small>Rimuovi filtro</small></a>
                                 {/if}
                                 <a {if $style|count()}class="{$style|implode( ' ' )}"{/if} href={concat( $node.url_alias, $uristring )|ezurl()}>
-                                    {$clean|wash()|explode( '(')|implode( ' (' )|explode( ',')|implode( ', ' )} ({$search_extras.facet_fields.$key.countList[$clean]})
+                                    {def $calcolate_name = false()}
+                                    {foreach $facet as $f}
+                                        {if $f|contains( '_id_' )}
+                                            {set $calcolate_name = true()}        
+                                            {break}
+                                        {/if}
+                                    {/foreach}
+                                    {if $calcolate_name}
+                                        {fetch( 'content', 'object', hash( 'object_id', $clean ) ).name|wash()|explode( '(')|implode( ' (' )|explode( ',')|implode( ', ' )}
+                                    {else}    
+                                        {$clean|wash()|explode( '(')|implode( ' (' )|explode( ',')|implode( ', ' )}
+                                    {/if}
+                                    ({$search_extras.facet_fields.$key.countList[$clean]})
+                                    {undef $calcolate_name}
                                 </a>
                             </div>
                         </li>
@@ -87,6 +101,7 @@
                     {/foreach}
                 </ul>
             </li>
+        {/if}
         </ul>
         {undef $name}
     {/foreach}

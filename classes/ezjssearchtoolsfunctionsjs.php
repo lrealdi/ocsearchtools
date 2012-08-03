@@ -24,6 +24,7 @@ class ezjsSearchToolsFunctionsJS extends ezjscServerFunctions
         $nodeID = $http->postVariable( 'nodeID', 0 );
         
         $subtree = explode( '::', $http->postVariable( 'subtree', array() ) );
+        
         if ( empty( $subtree ) )
         {
             $subtree = array( $nodeID );
@@ -58,6 +59,7 @@ class ezjsSearchToolsFunctionsJS extends ezjscServerFunctions
         $tpl->setVariable( 'nodeID', $nodeID );
         $tpl->setVariable( 'facets', $facets );
         $tpl->setVariable( 'classes', $classes );
+        $tpl->setVariable( 'subtree', $subtree );
         $tpl->setVariable( 'view_parameters', $viewParameters );
         return $tpl;
     }

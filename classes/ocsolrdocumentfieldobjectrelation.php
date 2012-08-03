@@ -36,16 +36,32 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
      */
     public static function getFieldName( eZContentClassAttribute $classAttribute, $subAttribute = null, $context = 'search' )
     {
-        
         switch ( $classAttribute->attribute( 'data_type_string' ) )
         {
-                case 'ezobjectrelation' :
-                {
-                    // Optimistic name generation here : assume the $subAttribute value actually matches
-                // one of the related object's attributes name. Hence the commented out line in the first "if" below.
+            case 'ezobjectrelation' :
+            {
+                // Optimistic name generation here : assume the $subAttribute value actually matches one of the related object's attributes name. Hence the commented out line in the first "if" below.
                 if ( $subAttribute and
                      $subAttribute !== '' and
-                     //array_key_exists( $subAttribute, self::$subattributesDefinition ) and
+                     $subAttribute != self::DEFAULT_SUBATTRIBUTE and
+                     ( $type = self::getTypeForSubattribute( $classAttribute, $subAttribute, $context ) ) )
+                {
+                    return parent::generateSubattributeFieldName( $classAttribute,
+                                                                  $subAttribute,
+                                                                  $type );
+                }
+                else
+                {
+                    return parent::generateAttributeFieldName( $classAttribute,
+                                                               self::$subattributesDefinition[self::DEFAULT_SUBATTRIBUTE_TYPE] );
+                }
+            } break;
+
+            case 'ezobjectrelationlist' :
+            {
+                  
+                if ( $subAttribute and
+                     $subAttribute !== '' and
                      $subAttribute != self::DEFAULT_SUBATTRIBUTE and
                      ( $type = self::getTypeForSubattribute( $classAttribute, $subAttribute, $context ) ) )
                 {
@@ -53,41 +69,18 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                     return parent::generateSubattributeFieldName( $classAttribute,
                                                                   $subAttribute,
                                                                   $type );
+                
                 }
                 else
                 {
                     // return the default field name here.
                     return parent::generateAttributeFieldName( $classAttribute,
-                                                               self::$subattributesDefinition[self::DEFAULT_SUBATTRIBUTE_TYPE] );
+                                                              self::$subattributesDefinition[self::DEFAULT_SUBATTRIBUTE_TYPE] );
                 }
-                } break;
-
-                case 'ezobjectrelationlist' :
-                  
-                  if ( $subAttribute and
-                     $subAttribute !== '' and
-                     $subAttribute != self::DEFAULT_SUBATTRIBUTE and
-                     ( $type = self::getTypeForSubattribute( $classAttribute, $subAttribute, $context ) ) )
-		  {
-		      // A subattribute was passed
-		      return parent::generateSubattributeFieldName( $classAttribute,
-								    $subAttribute,
-								    $type );
-		      
-		  }
-		  else
-		  {
-		      // return the default field name here.
-		      return parent::generateAttributeFieldName( $classAttribute,
-								 self::$subattributesDefinition[self::DEFAULT_SUBATTRIBUTE_TYPE] );
-		  }
-
-            {
-
             } break;
 
-                default:
-                {} break;
+            default:
+            break;
         }
     }
 
@@ -120,12 +113,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
         {
             if ( count( $rows ) > 1 )
             {
-                $msg = "Multiple types were found for subattribute '{$subAttribute}' of
-                class attribute #{$classAttribute->attribute( 'id' )} [{$classAttribute->attribute( 'data_type_string' )}].
-                This means that objects of different content classes were related through class attribute #{$classAttribute->attribute( 'id' )}
-                and had attributes named '{$subAttribute}' of different datatypes : \n"
-                . print_r( $rows , true ) .
-                " Picking the first one here : {$rows[0]['data_type_string']}";
+                $msg = "Multiple types were found for subattribute '{$subAttribute}' of class attribute #{$classAttribute->attribute( 'id' )} [{$classAttribute->attribute( 'data_type_string' )}]. This means that objects of different content classes were related through class attribute #{$classAttribute->attribute( 'id' )} and had attributes named '{$subAttribute}' of different datatypes : \n" . print_r( $rows , true ) . " Picking the first one here : {$rows[0]['data_type_string']}";
                 eZDebug::writeWarning( $msg,  __METHOD__ );
             }
             return ezfSolrDocumentFieldBase::getClassAttributeType( new eZContentClassAttribute( $rows[0] ), null, $context );
@@ -167,7 +155,9 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
             $metaDataArray = $contentObjectAttribute->metaData();
 
             if( !is_array( $metaDataArray ) )
+            {
                 $metaDataArray = array( $metaDataArray );
+            }
 
             foreach( $metaDataArray as $item )
             {
@@ -181,102 +171,87 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
     // Get an Array of all sub Attributes
     protected function getArrayrelatedObject( eZContentObject $relatedObject, $contentClassAttribute, $metaData = null )
     {
+        if ( $metaData === null )
+        {
+            $metaData = array();
+        }
         
-      if ( $metaData === null )
-      {
-          $metaData = array();
-      }
-      
-      if ( $relatedObject )
-      {
-	
-	  $objectName = $relatedObject->Name;
-	  $fieldName = parent::generateSubattributeFieldName( $contentClassAttribute,
-								      'name',
-								      self::DEFAULT_SUBATTRIBUTE_TYPE );
-	  
-	  if ( isset( $metaData[$fieldName] ) )
-	  {
-	      $metaData[$fieldName] = array_merge( $metaData[$fieldName], array( $objectName ) );
-	  }
-	  else
-	  {
-	      $metaData[$fieldName] = array( $objectName );
-	  }
-                        
-	  $baseList = $this->getBaseList( $relatedObject->attribute( 'current' ) );
-	  
-	  foreach( $baseList as $field )
-	  {
-	    	$tmpClassAttribute = $field->ContentObjectAttribute->attribute( 'contentclass_attribute' );
-		$fieldName = $field->ContentObjectAttribute->attribute( 'contentclass_attribute_identifier' );
-		
-	    	$fieldNameArray = array();
-	      	foreach( array_keys( eZSolr::$fieldTypeContexts ) as $context )
-	      	{
-	      	  
-	      	  $fieldNameArray[] = parent::generateSubattributeFieldName( $contentClassAttribute,
-								      $fieldName,
-								      ezfSolrDocumentFieldBase::getClassAttributeType( $tmpClassAttribute, null, $context ) );
-		}
-	      	$fieldNameArray = array_unique( $fieldNameArray );
+        if ( $relatedObject )
+        {
+            $objectName = $relatedObject->Name;
+            $fieldName = parent::generateSubattributeFieldName( $contentClassAttribute,
+                                                                'name',
+                                                                self::DEFAULT_SUBATTRIBUTE_TYPE );
+        
+            if ( isset( $metaData[$fieldName] ) )
+            {
+                $metaData[$fieldName] = array_merge( $metaData[$fieldName], array( $objectName ) );
+            }
+            else
+            {
+                $metaData[$fieldName] = array( $objectName );
+            }
+                      
+            $baseList = $this->getBaseList( $relatedObject->attribute( 'current' ) );
+        
+            foreach( $baseList as $field )
+            {
+                $tmpClassAttribute = $field->ContentObjectAttribute->attribute( 'contentclass_attribute' );
+                $fieldName = $field->ContentObjectAttribute->attribute( 'contentclass_attribute_identifier' );
+        
+                $fieldNameArray = array();
+                
+                foreach( array_keys( eZSolr::$fieldTypeContexts ) as $context )
+                {
+                    $fieldNameArray[] = parent::generateSubattributeFieldName( $contentClassAttribute,
+                                                                               $fieldName,
+                                                                               ezfSolrDocumentFieldBase::getClassAttributeType( $tmpClassAttribute, null, $context ) );
+                }
+                $fieldNameArray = array_unique( $fieldNameArray );
+        
+                $finalValue = '';
+                if ( $tmpClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelation' or
+                     $tmpClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
+                {
+                    $finalValue = $field->getPlainTextRepresentation();
+                }
+                else
+                {
+                    $finalValue = $this->preProcessValue( $field->ContentObjectAttribute->metaData(),
+                                                          parent::getClassAttributeType( $tmpClassAttribute ) );
+        
+                }
+                
+                foreach ( $fieldNameArray as $fieldName )
+                {
+                    //eZCLI::instance()->output(var_dump($metaData));
+                    if ( isset( $metaData[$fieldName] ) )
+                    {
+                        $metaData[$fieldName] = array_merge( $metaData[$fieldName], array( trim( $finalValue, "\t\r\n " ) ) );
+                    }
+                    else
+                    {
+                        $metaData[$fieldName] = array( trim( $finalValue, "\t\r\n " ) );
+                    }
+                    
+                }
+        
+            }
+        
+            $metaAttributeValues = eZSolr::getMetaAttributesForObject( $relatedObject );
 
-		$finalValue = '';
-		if ( $tmpClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelation' or
-		     $tmpClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
-		{
-		    $finalValue = $field->getPlainTextRepresentation();
-		}
-		else
-		{
-		    $finalValue = $this->preProcessValue( $field->ContentObjectAttribute->metaData(),
-                                            parent::getClassAttributeType( $tmpClassAttribute ) );
-
-		}
-		foreach ( $fieldNameArray as $fieldName )
-		{
-		  /*
-          //eZCLI::instance()->output(var_dump($metaData));
-		  if ( isset( $metaData[$fieldName] ) )
-		  {
-		      $metaData[$fieldName] = array_merge( $metaData[$fieldName], array( trim( $finalValue, "\t\r\n " ) ) );
-		  }
-		  else
-		  {
-		      $metaData[$fieldName] = array( trim( $finalValue, "\t\r\n " ) );
-		  }
-          */
-          
-          $arrayFinalValue = array( trim( $finalValue, "\t\r\n " ) );
-          
-          if ( isset( $metaData[$fieldName] )  )
-          {
-            $merge = array_diff( $metaData[$fieldName], $arrayFinalValue );  
-          }
-          
-          //eZCLI::instance()->output(var_dump($metaData));
-		  if ( isset( $metaData[$fieldName] ) && !empty( $merge ) )
-		  {
-              $metaData[$fieldName] = array_merge( $metaData[$fieldName], $arrayFinalValue );
-		  }
-		  else
-		  {
-		      $metaData[$fieldName] = $arrayFinalValue;
-		  }     
-		
-		}
-
-	  }
-
-	  
-	  $metaAttributeValues = eZSolr::getMetaAttributesForObject( $relatedObject );
-	  foreach ( $metaAttributeValues as $metaInfo )
-	  {
-	    $metaData[ezfSolrDocumentFieldBase::generateSubmetaFieldName( $metaInfo['name'], $contentClassAttribute )] = ezfSolrDocumentFieldBase::preProcessValue( $metaInfo['value'], $metaInfo['fieldType'] );
-	  }
-			
-	  return $metaData;
-      }
+            foreach ( $metaAttributeValues as $metaInfo )
+            {
+                $value = ezfSolrDocumentFieldBase::preProcessValue( $metaInfo['value'], $metaInfo['fieldType'] );
+                if ( !is_array( $value ) )
+                {
+                    $value = array( $value );
+                }
+                $metaData[ezfSolrDocumentFieldBase::generateSubmetaFieldName( $metaInfo['name'], $contentClassAttribute )] = $value;
+            }
+            
+            return $metaData;
+        }
     }
 
    
@@ -289,18 +264,20 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
 
         switch ( $contentClassAttribute->attribute( 'data_type_string' ) )
         {
-            case 'ezobjectrelation' :
+            case 'ezobjectrelation':
+            {
                 $returnArray = array();
                 
                 $relatedObject = $this->ContentObjectAttribute->content();
 
                 if ( $relatedObject )
-		    {
-			$returnArray = $this->getArrayrelatedObject($relatedObject, $contentClassAttribute);			
-		    }
-		return $returnArray;
+                {
+                    $returnArray = $this->getArrayrelatedObject($relatedObject, $contentClassAttribute);			
+                }
+                
+                return $returnArray;
 		
-                break;
+            } break;
                 
             case 'ezobjectrelationlist' :
             {
@@ -310,20 +287,26 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                 foreach( $content['relation_list'] as $relationItem )
                 {
                     $subObjectID = $relationItem['contentobject_id'];
+                    
                     if ( !$subObjectID )
+                    {
                         continue;
+                    }
+                    
                     $subObject = eZContentObjectVersion::fetchVersion( $relationItem['contentobject_version'], $subObjectID );
+                    
                     if ( !$subObject )
+                    {
                         continue;
-                                            
-                    // 1st create aggregated metadata fields
+                    }                       
+                    
                     $metaAttributeValues = eZSolr::getMetaAttributesForObject( $subObject->attribute( 'contentobject' ) );
                     
                     foreach ( $metaAttributeValues as $metaInfo )
                     {
                       
                         $submetaFieldName = ezfSolrDocumentFieldBase::generateSubmetaFieldName( $metaInfo['name'], $contentClassAttribute );
-                        
+
                         if ( isset( $returnArray[$submetaFieldName] ) )
                         {
                             $returnArray[$submetaFieldName] = array_merge( $returnArray[$submetaFieldName], array( ezfSolrDocumentFieldBase::preProcessValue( $metaInfo['value'], $metaInfo['fieldType'] ) ) );
@@ -335,33 +318,41 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                     }
                 }
                 
-		$contentClassAttribute = $this->ContentObjectAttribute->attribute( 'contentclass_attribute' );
+                $contentClassAttribute = $this->ContentObjectAttribute->attribute( 'contentclass_attribute' );
 	   
-		$content = $this->ContentObjectAttribute->content();
-		$attributeIdentifier = $this->ContentObjectAttribute->attribute( 'contentclass_attribute_identifier' );
-		
-		$returnArrayRelatedObject = array();
-		
-		foreach( $content['relation_list'] as $relationItem )
-		{
-		    $relatedObject = eZContentObject::fetch($relationItem['contentobject_id']);              	
-    
-		    if ( $relatedObject )
-		    {
-			$returnArrayRelatedObject = $this->getArrayrelatedObject($relatedObject, $contentClassAttribute, $returnArrayRelatedObject);			
-		    }
-		    
-		    $returnArray = array_merge($returnArray, $returnArrayRelatedObject);
-		}
-		
-		//eZCLI::instance()->output(var_dump($returnArray));
-                return $returnArray;
+                $content = $this->ContentObjectAttribute->content();
+                $attributeIdentifier = $this->ContentObjectAttribute->attribute( 'contentclass_attribute_identifier' );
                 
-            };
-                break;
-            default:
-            {
+                $returnArrayRelatedObject = array();
+                
+                foreach( $content['relation_list'] as $i => $relationItem )
+                {
+                    $relatedObject = eZContentObject::fetch($relationItem['contentobject_id']);              	
+            
+                    if ( $relatedObject )
+                    {
+                        $returnArrayRelatedObject = $this->getArrayrelatedObject( $relatedObject,
+                                                                                  $contentClassAttribute,
+                                                                                  $returnArrayRelatedObject);			
+                    }
+                    $returnArray = array_merge_recursive( $returnArray, $returnArrayRelatedObject);
+                }
+		
+                $result = array();
+                foreach ( $returnArray as $key => $value )
+                {
+                    if ( is_array( $value ) )
+                    {
+                        $value = array_unique( $value );
+                    }
+                    $result[$key] = $value;
+                }
+                return $result;
+
             } break;
+            
+            default:
+            break;
         }
     }
 

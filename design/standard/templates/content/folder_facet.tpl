@@ -20,11 +20,13 @@
 
 {* controllo nei view_parameters se ci sono filtri attivi selezionati dalle faccette *}
 {foreach $facets as $key => $value}
+    {if $value|ne('')}
     {def $name = $value.name|urlencode }
     {if and( is_set( $view_parameters.$name ), $view_parameters.$name|ne( '' ) )}    
         {set $filters = $filters|append( concat( $value.field, ':', $view_parameters.$name|urldecode ) )}
     {/if}
     {undef $name}
+    {/if}
 {/foreach}
 
 {* controllo i view_parameters per il sort: se non c'è lo applico *}
