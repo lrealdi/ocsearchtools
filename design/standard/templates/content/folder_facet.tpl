@@ -13,7 +13,7 @@
     {ezpagedata_set( 'query', $query )}
 *}
 
-{def $page_limit = 10     
+{def $page_limit = 20     
      $sort_by = hash()
      $query = ''
      $filters = array()}

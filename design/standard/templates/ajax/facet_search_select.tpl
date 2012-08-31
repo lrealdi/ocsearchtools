@@ -80,12 +80,9 @@
                                 {/if}
                                 <a {if $style|count()}class="{$style|implode( ' ' )}"{/if} href={concat( $node.url_alias, $uristring )|ezurl()}>
                                     {def $calcolate_name = false()}
-                                    {foreach $facet as $f}
-                                        {if $f|contains( '_id_' )}
-                                            {set $calcolate_name = true()}        
-                                            {break}
-                                        {/if}
-                                    {/foreach}
+                                    {if is_numeric( $clean )}
+                                        {set $calcolate_name = true()}        
+                                    {/if}
                                     {if $calcolate_name}
                                         {fetch( 'content', 'object', hash( 'object_id', $clean ) ).name|wash()|explode( '(')|implode( ' (' )|explode( ',')|implode( ', ' )}
                                     {else}    
