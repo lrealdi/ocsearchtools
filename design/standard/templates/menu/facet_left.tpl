@@ -72,7 +72,7 @@ $(function() {ldelim}
 <div class="border-tl"><div class="border-tr"><div class="border-tc"></div></div></div>
 <div class="border-ml"><div class="border-mr"><div class="border-mc">
 
-    <h4><a href={$node.node_id|ezurl}>{$node.name|wash()}</a></h4>
+    <h4><a href={$node.url_alias|ezurl}>{$node.name|wash()}</a></h4>
     
     <div class="block no-js-hide queryContainer">
         <label for="query">Ricerca libera:</label>
