@@ -1,17 +1,28 @@
-{ezpagedata_set( 'left_menu', 'facet_left' )}
+{*ezpagedata_set( 'left_menu', 'facet_left' )*}
+{ezpagedata_set( 'left_menu', false() )}
+
+{if is_set( $forceSort )|not()}
+    {def $forceSort = 0}
+{/if}
 
 {* invio al pagedata le informazioni così le ho anche nel pagelayout *}
-{ezpagedata_set( 'facets', $facets )}
-{ezpagedata_set( 'node', $node )}
+{*ezpagedata_set( 'facets', $facets )}
 {ezpagedata_set( 'sortString', $sortString )}
 {ezpagedata_set( 'classes', $classes )}
 {ezpagedata_set( 'subtree', $subtree )}
+{ezpagedata_set( 'forceSort', $forceSort )}
+{ezpagedata_set( 'view_parameters', $view_parameters )*}
 {*
     @TODO
     {ezpagedata_set( 'filters', $filters )}
     {ezpagedata_set( 'limit', $limit )}
     {ezpagedata_set( 'query', $query )}
 *}
+{def $params = hash( 'node', $node, 'facets', $facets, 'sortString', $sortString, 'classes', $classes, 'subtree', $subtree, 'forceSort', $forceSort, 'view_parameters', $view_parameters )}
+
+<div id="sidemenu" style="float:left;width:300px;font-size: 0.9em;">
+{include uri='design:menu/facet_left.tpl' name=facet_left params=$params}
+</div>
 
 {def $page_limit = 20     
      $sort_by = hash()
@@ -34,6 +45,11 @@
     {set $view_parameters = $view_parameters|merge( hash( 'sort', $sortString ) )}
 {/if}
 
+{if is_set( $view_parameters.forceSort )|not()}
+    {set $view_parameters = $view_parameters|merge( hash( 'forceSort', $forceSort ) )}
+{/if}
+
+
 {* parso il view_parameters.sort da stringa a hash *}
 {if and( is_set( $view_parameters.sort ), $view_parameters.sort|ne( '' ) )}
     {def $sortArray = $view_parameters.sort|explode( '|' )}
@@ -48,7 +64,9 @@
 {* controllo i view_parameters per la query text *}
 {if and( is_set( $view_parameters.query ), $view_parameters.query|ne( '' ) )}
     {set $query = $view_parameters.query}
-    {set $sort_by = hash( 'score', 'desc' )}
+    {if $view_parameters.forceSort|ne(1)}
+        {set $sort_by = hash( 'score', 'desc' )}
+    {/if}
 {/if}
 
 {* fetch a solr *}
@@ -65,7 +83,7 @@
      $search_extras = $search['SearchExtras']
      $search_data = $search}
 
-<div class="border-box">
+<div class="border-box" style="float:left;width:669px">
 <div class="border-tl"><div class="border-tr"><div class="border-tc"></div></div></div>
 <div class="border-ml"><div class="border-mr"><div class="border-mc float-break">
 

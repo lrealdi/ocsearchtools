@@ -37,7 +37,9 @@
 {* controllo i view_parameters per la query text *}
 {if and( is_set( $view_parameters.query ), $view_parameters.query|ne( '' ) )}
     {set $query = $view_parameters.query}
-    {set $sort_by = hash( 'score', 'desc' )}
+    {if $view_parameters.forceSort|ne(1)}
+        {set $sort_by = hash( 'score', 'desc' )}
+    {/if}
 {/if}
 
 {* fetch a solr *}
