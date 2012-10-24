@@ -2,11 +2,19 @@
 {ezscript_require( array( 'ezjsc::jquery', 'ezjsc::jqueryio', 'folderFacets.js' ) )}
 {ezcss_require( array( 'folderFacets.css' ) )}
 
-{def $node = cond( is_set( $pagedata.persistent_variable.node ), $pagedata.persistent_variable.node, fetch( 'content', 'node', hash( 'node_id', $nodeID ) ) )
+{*def $node = cond( is_set( $pagedata.persistent_variable.node ), $pagedata.persistent_variable.node, fetch( 'content', 'node', hash( 'node_id', $nodeID ) ) )
      $sortString = cond( is_set( $pagedata.persistent_variable.sortString ), $pagedata.persistent_variable.sortString, false() )
+     $forceSort = cond( is_set( $pagedata.persistent_variable.forceSort ), $pagedata.persistent_variable.forceSort, 0 )
      $classes = cond( is_set( $pagedata.persistent_variable.classes ), $pagedata.persistent_variable.classes, array() )
      $subtree = cond( is_set( $pagedata.persistent_variable.subtree ), $pagedata.persistent_variable.subtree, array( $pagedata.extra_menu_node_id ) )
-     $facets = cond( is_set( $pagedata.persistent_variable.facets ), $pagedata.persistent_variable.facets, array() )}
+     $facets = cond( is_set( $pagedata.persistent_variable.facets ), $pagedata.persistent_variable.facets, array() )*}
+{def $node = cond( is_set( $params.node ), $params.node, fetch( 'content', 'node', hash( 'node_id', $nodeID ) ) )
+     $sortString = cond( is_set( $params.sortString ), $params.sortString, false() )
+     $forceSort = cond( is_set( $params.forceSort ), $params.forceSort, 0 )
+     $classes = cond( is_set( $params.classes ), $params.classes, array() )
+     $subtree = cond( is_set( $params.subtree ), $params.subtree, array( $pagedata.extra_menu_node_id ) )
+     $facets = cond( is_set( $params.facets ), $params.facets, array() )
+     $view_parameters = cond( is_set( $params.view_parameters ), $params.view_parameters, array() )}     
 {* @TODO *}
 {def $filters = array()
      $query = ''
@@ -30,9 +38,16 @@
 {/if}
 
 {* controllo i view_parameters per il sort: se non c'è lo applico (non lo converto in hash perché in questa fetch non mi serve, serve per il js e per l'uristring) *}
-{if and( $sortString, is_set( $view_parameters.sort )|not() )}
-    {set $view_parameters = $view_parameters|merge( hash( 'sort', $sortString ) )}
+{if and( $sortString, is_set( $view_parameters.sort )|not() )}    
+    {set $view_parameters = $view_parameters|merge( hash( 'sort', $sortString, 'forceSort', $forceSort ) )}
 {/if}
+
+{def $viewParametersString = ''}
+{foreach $view_parameters as $key => $param}
+    {if $param|ne('')}
+    {set $viewParametersString = concat( $viewParametersString, '/(', $key, ')/', $param )}
+    {/if}
+{/foreach}
 
 {* fetch a solr *}
 {def $search_hash = hash( 'subtree_array', $subtree,
@@ -61,6 +76,7 @@ $(function() {ldelim}
         facets: "{$facetStringArray|implode( '::' )}",
         classes: "{$classes|implode('::')}",        
         sort: "{$sortString}",
+        forceSort: "{$forceSort}"
     {rdelim};
     $.folderFacets( options );
 {rdelim});
@@ -76,7 +92,7 @@ $(function() {ldelim}
     
     <div class="block no-js-hide queryContainer">
         <label for="query">Ricerca libera:</label>
-        <input class="box" size="30" name="query" id="query">
+        <input class="box" size="30" name="query" id="query" />
         <span id="clearSearch" style="display:none">x</span> 
     </div>
     
@@ -85,6 +101,7 @@ $(function() {ldelim}
     {foreach $search_extras.facet_fields as $key => $facet}
         {def $name = $facets.$key.name|urlencode()}
         <ul class="menu-list">
+        <input type="hidden" name="hiddenOptions" id="hiddenOptions" value='{$viewParametersString}' />
         {if $facet.nameList|count()|gt(0)}
             <li><div><strong>{$facets.$key.name|explode( '_' )|implode( ' ' )|wash()}</strong></div>                
                 <ul class="submenu-list">
@@ -119,7 +136,11 @@ $(function() {ldelim}
                                         {set $calcolate_name = true()}        
                                     {/if}
                                     {if $calcolate_name}
+                                        {if $facets.$key.field|eq( 'meta_main_parent_node_id_si' )}
+                                        {fetch( 'content', 'node', hash( 'node_id', $clean ) ).name|wash()|explode( '(')|implode( ' (' )|explode( ',')|implode( ', ' )}
+                                        {else}
                                         {fetch( 'content', 'object', hash( 'object_id', $clean ) ).name|wash()|explode( '(')|implode( ' (' )|explode( ',')|implode( ', ' )}
+                                        {/if}
                                     {else}    
                                         {$clean|wash()|explode( '(')|implode( ' (' )|explode( ',')|implode( ', ' )}
                                     {/if}

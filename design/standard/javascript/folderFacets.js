@@ -28,10 +28,12 @@ esempio di oprions:
             var postData = $.merge([], postDataCommon);            
             var url = $(event.target).is( 'a' ) ? $(event.target).prop( 'href' ).replace( options.baseurl, '' ) : $(event.target).parent().prop( 'href' ).replace( options.baseurl, '' );
             if ( url.length ){            
+                var data = '' ;
                 if ( options.sort ){
-                    var data = 'sort::' + options.sort + ';';
-                }else{
-                    var data = '' ;
+                    data += 'sort::' + options.sort + ';';
+                }                
+                if ( options.forceSort ){
+                    data += 'forceSort::' + options.forceSort + ';';
                 }            
                 var parts = url.split('/');            
                 for(var i=0;i<parts.length;i++) {
@@ -60,12 +62,16 @@ esempio di oprions:
                 $('#clearSearch').hide();
             }
             if ( url.length >= 12 || url.length == 9 ){                
+                var data = '' ;
                 if ( options.sort ){
-                    var data = 'sort::' + options.sort + ';';
-                }else{
-                    var data = '' ;
+                    data += 'sort::' + options.sort + ';';
+                }                
+                if ( options.forceSort ){
+                    data += 'forceSort::' + options.forceSort + ';';
                 }
-                var parts = url.split('/');            
+                var params = $( '#hiddenOptions' ).val();
+                params += url; 
+                var parts = params.split('/');            
                 for(var i=0;i<parts.length;i++) {
                         if( (i % 2) != 0 ){
                             var name = parts[i].replace( '(', '' ).replace( ')', '' );

@@ -59,7 +59,7 @@ class ezjsSearchToolsFunctionsJS extends ezjscServerFunctions
         $tpl->setVariable( 'nodeID', $nodeID );
         $tpl->setVariable( 'facets', $facets );
         $tpl->setVariable( 'classes', $classes );
-        $tpl->setVariable( 'subtree', $subtree );
+        $tpl->setVariable( 'subtree', $subtree );        
         $tpl->setVariable( 'view_parameters', $viewParameters );
         return $tpl;
     }
