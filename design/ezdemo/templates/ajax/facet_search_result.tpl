@@ -9,7 +9,7 @@
 
 {*  imposto le variabili per la ricerca delle faccette *}
 {def $node = fetch( 'content', 'node', hash( 'node_id', $nodeID ) )
-     $page_limit = 20
+     $page_limit = $view_parameters.pageLimit
      $filters = array()
      $sort_by = hash()
      $query = ''}

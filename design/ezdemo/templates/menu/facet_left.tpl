@@ -77,8 +77,8 @@
 {* inizializzo ajax *}
 <script type="text/javascript">
 //<![CDATA[
-$(function() {ldelim}  
-    var options =
+$(function() {ldelim}{*
+    *}var options =
     {ldelim}
         baseurl: "{$node.url_alias|ezurl( no, full )}",
         nodeID: "{$node.node_id}",
@@ -89,8 +89,8 @@ $(function() {ldelim}
         sort: "{$sortString}",        
         useDateFilter: "{$params.useDateFilter|int()}",        
         forceSort: "{$forceSort}"
-    {rdelim};
-    $.folderFacets( options );
+    {rdelim};{*
+    *}$.folderFacets( options );
 {rdelim});
 //]]>
 </script>

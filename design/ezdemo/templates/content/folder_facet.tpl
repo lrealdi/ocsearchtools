@@ -21,6 +21,11 @@
 {def $menu_size = 2}
 {/if}
 
+{if not( is_set( $menu_size ) )}
+{def $page_limit = 20}
+{/if}
+{set $view_parameters = $view_parameters|merge( hash( 'pageLimit', $page_limit ) )}
+
 {def $content_size = $container_size|sub( $menu_size )}
 {set $view_parameters = $view_parameters|merge( hash( 'contentSize', $content_size ) )}
 
@@ -38,8 +43,7 @@
 {include uri='design:menu/facet_left.tpl' name=facet_left params=$params}
 </div>
 
-{def $page_limit = 20
-     $sort_by = hash()
+{def $sort_by = hash()
      $query = ''
      $filters = array()}
 
