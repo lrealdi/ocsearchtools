@@ -1,26 +1,9 @@
-{*ezpagedata_set( 'left_menu', 'facet_left' )*}
+<section class="content-view-full row">
 {ezpagedata_set( 'left_menu', false() )}
-
-
 
 {if is_set( $forceSort )|not()}
     {def $forceSort = 0}
 {/if}
-
-{* invio al pagedata le informazioni così le ho anche nel pagelayout *}
-{*ezpagedata_set( 'facets', $facets )}
-{ezpagedata_set( 'sortString', $sortString )}
-{ezpagedata_set( 'classes', $classes )}
-{ezpagedata_set( 'subtree', $subtree )}
-{ezpagedata_set( 'forceSort', $forceSort )}
-{ezpagedata_set( 'view_parameters', $view_parameters )*}
-
-{*
-    @TODO
-    {ezpagedata_set( 'filters', $filters )}
-    {ezpagedata_set( 'limit', $limit )}
-    {ezpagedata_set( 'query', $query )}
-*}
 
 {if not( is_set( $default_filters ) )}
 {def $default_filters = array()}
@@ -40,7 +23,7 @@
                      'useDateFilter', $useDateFilter,
                      'view_parameters', $view_parameters )}
 
-<div id="sidemenu" style="float:left;width:300px;font-size: 0.9em;">
+<div id="sidemenu" class="span2">
 {include uri='design:menu/facet_left.tpl' name=facet_left params=$params}
 </div>
 
@@ -114,8 +97,8 @@
      $search_extras = $search['SearchExtras']
      $search_data = $search}
 
-<section class="content-view-full">
-    <div class="class-folder">  
+
+    <div class="class-folder span6">  
 
         <div class="attribute-header">
             <h1>
