@@ -21,7 +21,7 @@
 {def $menu_size = 6}
 {/if}
 
-{def $container_size = $container_size|sub( $menu_size )}
+{def $content_size = $container_size|sub( $menu_size )}
 {set $view_parameters = $view_parameters|merge( hash( 'contentSize', $content_size ) )}
 
 {def $params = hash( 'node', $node,
