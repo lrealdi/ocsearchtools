@@ -46,10 +46,11 @@
     {set $query = $view_parameters.query}
 {/if}
 
-{* controllo i view_parameters per il sort: se non c'è lo applico (non lo converto in hash perché in questa fetch non mi serve, serve per il js e per l'uristring) *}
+{* controllo i view_parameters per il sort: se non c'è lo applico (non lo converto in hash perché in questa fetch non mi serve, serve per il js e per l'uristring)
 {if and( $sortString, is_set( $view_parameters.sort )|not() )}    
     {set $view_parameters = $view_parameters|merge( hash( 'sort', $sortString, 'forceSort', $forceSort ) )}
 {/if}
+*}
 
 {def $viewParametersString = ''}
 {foreach $view_parameters as $key => $param}

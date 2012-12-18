@@ -21,7 +21,7 @@
 {def $menu_size = 2}
 {/if}
 
-{if not( is_set( $menu_size ) )}
+{if not( is_set( $page_limit ) )}
 {def $page_limit = 20}
 {/if}
 {set $view_parameters = $view_parameters|merge( hash( 'pageLimit', $page_limit ) )}
