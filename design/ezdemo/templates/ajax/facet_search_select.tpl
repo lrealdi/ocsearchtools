@@ -54,7 +54,7 @@
     {set $viewParametersString = concat( $viewParametersString, '/(', $key, ')/', $param )}
     {/if}
 {/foreach}
-
+<input type="hidden" name="hiddenOptions" id="hiddenOptions" value='{$viewParametersString}'' />
 {if $useDateFilter}
     {def $dateString = ''
          $dateStyle = ''}
@@ -87,7 +87,6 @@
     </li></ul> 
 {/if}
 
-<input type="hidden" name="hiddenOptions" id="hiddenOptions" value='{$viewParametersString}'' />
 {if $search_count|gt(0)}
 {if and ( $facets|count(), is_set( $search_extras.facet_fields ) )}
     {foreach $search_extras.facet_fields as $key => $facet}
