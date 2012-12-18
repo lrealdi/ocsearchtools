@@ -87,13 +87,12 @@
     </li></ul> 
 {/if}
 
+<input type="hidden" name="hiddenOptions" id="hiddenOptions" value='{$viewParametersString}'' />
 {if $search_count|gt(0)}
-
 {if and ( $facets|count(), is_set( $search_extras.facet_fields ) )}
     {foreach $search_extras.facet_fields as $key => $facet}
-        {def $name = $facets.$key.name|urlencode()}
-        <ul class="menu-list">
-        <input type="hidden" name="hiddenOptions" id="hiddenOptions" value='{$viewParametersString}'' />
+        {def $name = $facets.$key.name|urlencode()}        
+        <ul class="menu-list">        
         {if $facet.nameList|count()|gt(0)}
             <li><div><strong>{$facets.$key.name|explode( '_' )|implode( ' ' )|wash()}</strong></div>                
                 <ul class="submenu-list">
