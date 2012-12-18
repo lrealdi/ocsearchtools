@@ -23,6 +23,10 @@
     {undef $name}
 {/foreach}
 
+{if and( is_set( $default_filters ), $default_filters|ne('') ) }
+	{set $filters = $filters|merge( $default_filters )}
+{/if}
+
 {* parso il view_parameters.sort da stringa a hash *}
 {if and( is_set( $view_parameters.sort ), $view_parameters.sort|ne( '' ) )}
     {def $sortArray = $view_parameters.sort|explode( '|' )} 
@@ -48,6 +52,7 @@
                           'class_id', $classes,
                           'filter', $filters,
                           'offset', $view_parameters.offset,
+                          'publish_date', $view_parameters.dateFilter,
                           'sort_by', cond( $sort_by|count()|gt(0), $sort_by, false() ),
                           'spell_check', array( true() ),
                           'limit', $page_limit)

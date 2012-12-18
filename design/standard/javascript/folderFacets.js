@@ -20,7 +20,9 @@ esempio di oprions:
             postDataCommon.push( {'name': 'nodeID', 'value': options.nodeID} ); //intero
             postDataCommon.push( {'name': 'facets', 'value': options.facets} ); //stringa "subattr__test_t;Test;10;subattr__test_t;Test;10;...""
             postDataCommon.push( {'name': 'classes', 'value': options.classes} ); //stringa
-            postDataCommon.push( {'name': 'subtree', 'value': options.subtree} );
+            postDataCommon.push( {'name': 'subtree', 'value': options.subtree} );            
+            postDataCommon.push( {'name': 'use_date_filter', 'value': options.useDateFilter} );            
+            postDataCommon.push( {'name': 'default_filters', 'value': options.defaultFilters} );
         
         /* event handlers */
         

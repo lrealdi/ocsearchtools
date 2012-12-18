@@ -22,6 +22,10 @@
     {undef $name}
 {/foreach}
 
+{if and( is_set( $default_filters ), $default_filters|ne('') ) }
+	{set $filters = $filters|merge( $default_filters )}
+{/if}
+
 {* controllo i view_parameters per la query text *}
 {if and( is_set( $view_parameters.query ), $view_parameters.query|ne( '' ) )}
     {set $query = $view_parameters.query}
@@ -34,6 +38,7 @@
                           'query', $query,
                           'facet', $facets,
                           'class_id', $classes,
+                          'publish_date', $view_parameters.dateFilter,
                           'filter', $filters,
                           'limit', $page_limit)
      $search = fetch( ezfind, search, $search_hash )
@@ -49,6 +54,38 @@
     {set $viewParametersString = concat( $viewParametersString, '/(', $key, ')/', $param )}
     {/if}
 {/foreach}
+
+{if $useDateFilter}
+    {def $dateString = ''
+         $dateStyle = ''}
+    {foreach $view_parameters as $key2 => $value}
+        {if and( $value|ne(''), $key2|ne( 'offset' ) )}
+            {set $dateString = concat( $dateString, '/(' , $key2, ')/', $value )}
+        {/if}
+    {/foreach}
+    
+    {def $dateFilters = hash( 1, "Last day", 2, "Last week", 3, "Last month", 4, "Last three months", 5, "Last year" )}
+    
+    <ul class="menu-list"> 
+        <li><div><strong>{'Creation time'|i18n( 'extension/ezfind/facets' )}</strong></div>  
+        <ul class="submenu-list">
+            {if and( is_set( $view_parameters.dateFilter ), $view_parameters.dateFilter|gt( 0 ), $view_parameters.dateFilter|lt( 6 ) )}
+                <li><div>                
+                    {set $dateString = $dateString|explode( concat( '/(dateFilter)/', $view_parameters.dateFilter ) )|implode( '' )
+                         $dateStyle = 'current'}
+                    <a class="helper" href={concat( $node.url_alias, $dateString )|ezurl()} title="Rimuovi filtro"><small>Rimuovi filtro</small></a>
+                    <a class="{$dateStyle}" href={concat( $node.url_alias, $dateString )|ezurl}>{$dateFilters[$view_parameters.dateFilter]|i18n("design/standard/content/search")}</a>
+                </div></li>
+            {else}
+                {foreach $dateFilters as $index => $date}
+                    <li><div>
+                    <a href={concat( $node.url_alias, $dateString, '/(dateFilter)/', $index )|ezurl}>{$date|i18n("design/standard/content/search")}</a>
+                    </div></li>
+                {/foreach}
+            {/if}
+        </ul>
+    </li></ul> 
+{/if}
 
 {if $search_count|gt(0)}
 

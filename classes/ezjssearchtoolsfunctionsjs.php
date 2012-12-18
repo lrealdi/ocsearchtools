@@ -44,6 +44,11 @@ class ezjsSearchToolsFunctionsJS extends ezjscServerFunctions
                              );
         }
         
+        $defaultFilters = array();
+        $tmpDefaultFilters = $http->postVariable( 'default_filters', false );
+        if ( $tmpDefaultFilters )
+            $defaultFilters = explode( ';', $tmpDefaultFilters );
+        
         $viewParameters = array();
         $tmpViewParameters = $http->postVariable( 'view_parameters', '' );
         $tmpViewParameters = explode( ';' , $tmpViewParameters );
@@ -56,8 +61,17 @@ class ezjsSearchToolsFunctionsJS extends ezjscServerFunctions
             }
         }
         
+        $useDateFilter = $http->postVariable( 'use_date_filter', 0 );
+        
+        if ( ( isset( $viewParameters['dateFilter'] ) && $viewParameters['dateFilter'] > 6 ) || ( $useDateFilter == 0 ) ) 
+        {
+            $viewParameters['dateFilter'] = 0;
+        }
+        
+        $tpl->setVariable( 'useDateFilter', $useDateFilter );
         $tpl->setVariable( 'nodeID', $nodeID );
-        $tpl->setVariable( 'facets', $facets );
+        $tpl->setVariable( 'facets', $facets );        
+        $tpl->setVariable( 'default_filters', $defaultFilters );
         $tpl->setVariable( 'classes', $classes );
         $tpl->setVariable( 'subtree', $subtree );        
         $tpl->setVariable( 'view_parameters', $viewParameters );

@@ -14,23 +14,32 @@
      $classes = cond( is_set( $params.classes ), $params.classes, array() )
      $subtree = cond( is_set( $params.subtree ), $params.subtree, array( $pagedata.extra_menu_node_id ) )
      $facets = cond( is_set( $params.facets ), $params.facets, array() )
-     $view_parameters = cond( is_set( $params.view_parameters ), $params.view_parameters, array() )}     
+     $view_parameters = cond( is_set( $params.view_parameters ), $params.view_parameters, array() )
+     $default_filters = cond( is_set( $params.default_filters ), $params.default_filters, array() )
+     $dateFilter = cond( and( $params.useDateFilter, is_set( $view_parameters.dateFilter ), $view_parameters.dateFilter|gt( 0 ), $view_parameters.dateFilter|lt( 6 ) ), $view_parameters.dateFilter, 0 )}     
 {* @TODO *}
 {def $filters = array()
      $query = ''
      $page_limit = 1}    
 
 {* controllo nei view_parameters se ci sono filtri attivi selezionati dalle faccette *}
+
 {def $facetStringArray = array()}
 {foreach $facets as $key => $value}
-    {* preparo le faccette in forma di stringa ("subattr__test_t;Test;10") *}
-    {set $facetStringArray = $facetStringArray|append( concat( $value.field, ';', $value.name, ';', $value.limit ) )}
-    {def $name = $value.name|urlencode }
-    {if and( is_set( $view_parameters.$name ), $view_parameters.$name|ne( '' ) )}    
-        {set $filters = $filters|append( concat( $value.field, ':', $view_parameters.$name|urldecode ) )}
+    {if and( is_set( $value.field ), is_set( $value.name ), is_set( $value.limit ) )}
+        {* preparo le faccette in forma di stringa ("subattr__test_t;Test;10") *}
+        {set $facetStringArray = $facetStringArray|append( concat( $value.field, ';', $value.name, ';', $value.limit ) )}
+        {def $name = $value.name|urlencode }
+        {if and( is_set( $view_parameters.$name ), $view_parameters.$name|ne( '' ) )}    
+            {set $filters = $filters|append( concat( $value.field, ':', $view_parameters.$name|urldecode ) )}
+        {/if}
+        {undef $name}
     {/if}
-    {undef $name}
 {/foreach}
+
+{if and( $default_filters, $default_filters|ne('') ) }
+	{set $filters = $filters|merge( $default_filters )}
+{/if}
 
 {* controllo i view_parameters per la query text *}
 {if and( is_set( $view_parameters.query ), $view_parameters.query|ne( '' ) )}
@@ -55,6 +64,7 @@
                           'class_id', $classes,
                           'facet', $facets,
                           'filter', $filters,
+                          'publish_date', $dateFilter,
                           'spell_check', array( true() ),
                           'limit', $page_limit)
      $search = fetch( ezfind, search, $search_hash )
@@ -73,9 +83,11 @@ $(function() {ldelim}
         baseurl: "{$node.url_alias|ezurl( no, full )}",
         nodeID: "{$node.node_id}",
         subtree: "{$subtree|implode('::')}",
+        defaultFilters: '{$default_filters|implode(';')}',
         facets: "{$facetStringArray|implode( '::' )}",
         classes: "{$classes|implode('::')}",        
-        sort: "{$sortString}",
+        sort: "{$sortString}",        
+        useDateFilter: "{$params.useDateFilter|int()}",        
         forceSort: "{$forceSort}"
     {rdelim};
     $.folderFacets( options );
@@ -97,11 +109,44 @@ $(function() {ldelim}
     </div>
     
     <div id="select">
+    <input type="hidden" name="hiddenOptions" id="hiddenOptions" value='{$viewParametersString}' />
+        
+    {if $params.useDateFilter}    
+        {def $dateString = ''
+             $dateStyle = ''}
+        {foreach $view_parameters as $key2 => $value}
+            {if and( $value|ne(''), $key2|ne( 'offset' ) )}
+                {set $dateString = concat( $dateString, '/(' , $key2, ')/', $value )}
+            {/if}
+        {/foreach}
+        
+        {def $dateFilters = hash( 1, "Last day", 2, "Last week", 3, "Last month", 4, "Last three months", 5, "Last year" )}
+        
+        <ul class="menu-list"> 
+            <li><div><strong>{'Creation time'|i18n( 'extension/ezfind/facets' )}</strong></div>  
+            <ul class="submenu-list">
+                {if and( is_set( $view_parameters.dateFilter ), $view_parameters.dateFilter|gt( 0 ), $view_parameters.dateFilter|lt( 6 ) )}
+                    <li><div>                
+                        {set $dateString = $dateString|explode( concat( '/(dateFilter)/', $view_parameters.dateFilter ) )|implode( '' )
+                             $dateStyle = 'current'}
+                        <a class="helper" href={concat( $node.url_alias, $dateString )|ezurl()} title="Rimuovi filtro"><small>Rimuovi filtro</small></a>
+                        <a class="{$dateStyle}" href={concat( $node.url_alias, $dateString )|ezurl}>{$dateFilters[$view_parameters.dateFilter]|i18n("design/standard/content/search")}</a>
+                    </div></li>
+                {else}
+                    {foreach $dateFilters as $index => $date}
+                        <li><div>
+                        <a href={concat( $node.url_alias, $dateString, '/(dateFilter)/', $index )|ezurl}>{$date|i18n("design/standard/content/search")}</a>
+                        </div></li>
+                    {/foreach}
+                {/if}
+            </ul>
+        </li></ul> 
+    {/if}   
+
     {if and( $facets|count(), is_set( $search_extras.facet_fields ) )}
     {foreach $search_extras.facet_fields as $key => $facet}
         {def $name = $facets.$key.name|urlencode()}
-        <ul class="menu-list">
-        <input type="hidden" name="hiddenOptions" id="hiddenOptions" value='{$viewParametersString}' />
+        <ul class="menu-list">        
         {if $facet.nameList|count()|gt(0)}
             <li><div><strong>{$facets.$key.name|explode( '_' )|implode( ' ' )|wash()}</strong></div>                
                 <ul class="submenu-list">
