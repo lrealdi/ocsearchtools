@@ -73,7 +73,7 @@
 
     <div class="content-view-children">
         {foreach $search_result as $child }
-            {node_view_gui view='line' content_node=$child}
+            {node_view_gui view='line' content_node=$child content_size=$view_parameters.contentSize}
         {/foreach}
     </div>
     

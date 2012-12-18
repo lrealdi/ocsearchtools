@@ -13,6 +13,17 @@
 {def $useDateFilter = false()}
 {/if}
 
+{if not( is_set( $container_size ) )}
+{def $container_size = 8}
+{/if}
+
+{if not( is_set( $menu_size ) )}
+{def $menu_size = 6}
+{/if}
+
+{def $container_size = $container_size|sub( $menu_size )}
+{set $view_parameters = $view_parameters|merge( hash( 'contentSize', $content_size ) )}
+
 {def $params = hash( 'node', $node,
                      'facets', $facets,
                      'default_filters', $default_filters,
@@ -23,7 +34,7 @@
                      'useDateFilter', $useDateFilter,
                      'view_parameters', $view_parameters )}
 
-<div id="sidemenu" class="span2">
+<div id="sidemenu" class="span{$menu_size}">
 {include uri='design:menu/facet_left.tpl' name=facet_left params=$params}
 </div>
 
@@ -56,7 +67,6 @@
 {if is_set( $view_parameters.forceSort )|not()}
     {set $view_parameters = $view_parameters|merge( hash( 'forceSort', $forceSort ) )}
 {/if}
-
 
 {* parso il view_parameters.sort da stringa a hash *}
 {if and( is_set( $view_parameters.sort ), $view_parameters.sort|ne( '' ) )}
@@ -98,7 +108,7 @@
      $search_data = $search}
 
 
-    <div class="class-folder span6">  
+    <div class="class-folder span{$content_size}">  
 
         <div class="attribute-header">
             <h1>
@@ -118,7 +128,7 @@
 
             <div class="content-view-children">
                 {foreach $search_result as $child }
-                    {node_view_gui view='line' content_node=$child content_size=6}
+                    {node_view_gui view='line' content_node=$child content_size=$content_size}
                 {/foreach}
             </div>
 
