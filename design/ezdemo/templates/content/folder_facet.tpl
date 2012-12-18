@@ -1,4 +1,4 @@
-<section class="content-view-full row">
+<section class="content-view-folder-facet row">
 {ezpagedata_set( 'left_menu', false() )}
 
 {if is_set( $forceSort )|not()}
