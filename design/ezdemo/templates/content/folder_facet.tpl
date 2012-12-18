@@ -18,7 +18,7 @@
 {/if}
 
 {if not( is_set( $menu_size ) )}
-{def $menu_size = 6}
+{def $menu_size = 2}
 {/if}
 
 {def $content_size = $container_size|sub( $menu_size )}
