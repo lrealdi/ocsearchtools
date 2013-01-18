@@ -56,8 +56,22 @@ else
         $xml = fakeAddObject( $object );
         foreach ( $xml as $doc )
         {
-            $doc->Doc->formatOutput = true;
-            echo '<pre style="border: 1px solid rgb(204, 204, 204); background: none repeat scroll 0% 0% rgb(238, 238, 238); border-radius: 5px 5px 5px 5px; padding: 10px;">' . htmlentities( $doc->Doc->saveXML( $doc->RootElement ) ) . '</pre>';
+            if ( is_object( $doc ) )
+            {
+                if ( is_object( $doc->Doc ) )
+                {
+                    $doc->Doc->formatOutput = true;
+                    echo '<pre style="border: 1px solid rgb(204, 204, 204); background: none repeat scroll 0% 0% rgb(238, 238, 238); border-radius: 5px 5px 5px 5px; padding: 10px;">' . htmlentities( $doc->Doc->saveXML( $doc->RootElement ) ) . '</pre>';
+                }
+                else
+                {
+                    $dom = new DOMDocument;
+                    $dom->preserveWhiteSpace = FALSE;
+                    $dom->loadXML( $doc->docToXML() );
+                    $dom->formatOutput = TRUE;
+                    echo '<pre style="border: 1px solid rgb(204, 204, 204); background: none repeat scroll 0% 0% rgb(238, 238, 238); border-radius: 5px 5px 5px 5px; padding: 10px;">' . htmlentities( $dom->saveXML( $dom->RootElement ) ) . '</pre>';
+                }
+            }
         }
         
         
