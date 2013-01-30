@@ -11,6 +11,12 @@ else
     $object = eZContentObject::fetch( intval( $ObjectID ) );
     if ( $object )
     {
+        if ( !$object->attribute( 'can_read' ) )
+        {
+            return $Module->handleError( eZError::KERNEL_ACCESS_DENIED, 'kernel' );
+            eZExecution::cleanExit();
+        }
+        
         echo "<h2>Indexing object ID: <em>" . $object->attribute( 'id' ) . "</em><br />Name: <em>" . $object->attribute( 'name' ) . "</em><br /> Main node ID:  <em>" . $object->attribute( 'main_node_id' ) . "</em><br />Class: <em>" . $object->attribute( 'class_identifier' ) . "</em></h2>";
         $attribues = $object->dataMap();
         echo '<table cellpadding="10">';
