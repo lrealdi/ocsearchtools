@@ -11,8 +11,7 @@ $(document).ready(function(){
             var select = $('#select', data).html();
             $("#children").html(children);
             $("#select").html(select);
-            $("#children").css( 'opacity', '1' );
-            lineCompact();
+            $("#children").css( 'opacity', '1' );            
         });        
     });
     $(window).trigger( 'hashchange' );
