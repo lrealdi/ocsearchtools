@@ -21,6 +21,7 @@ $(document).ready(function(){
         else
             var href = $(event.currentTarget).is( 'a' ) ? $(event.currentTarget).attr( 'href' ): $(event.currentTarget).parent().attr( 'href' );                            
         $.bbq.pushState({ page: href });       
+        event.preventDefault();
         return false;
     });    
 })
