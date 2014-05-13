@@ -7,6 +7,9 @@ OptimizeOnCommit=disabled
 [SolrFieldMapSettings]
 CustomMap[ezobjectrelation]=ocSolrDocumentFieldObjectRelation
 CustomMap[ezobjectrelationlist]=ocSolrDocumentFieldObjectRelation
+CustomMap[ezdate]=ocSolrDocumentFieldDate
+CustomMap[ezdatetime]=ocSolrDocumentFieldDate
+CustomMap[ezstring]=ocSolrDocumentFieldString
 
 DatatypeMap[ezobjectrelationlist]=string
 

@@ -1,5 +1,4 @@
 <?php
-
 if ( NULL == $Params['ObjectID'] )
 {
     echo 'Specificare un object ID';
@@ -9,6 +8,19 @@ else
     $ObjectID = $Params['ObjectID'];
     $searchEngine = new eZSolr();
     $object = eZContentObject::fetch( intval( $ObjectID ) );
+
+    //$tst = OpenTeamMilestone::fromObject( $object );
+    //echo '<pre>';
+    //print_r($tst->attribute('invoices'));
+    //die();
+    
+    //$test = new OpenTeamWhoCan( $object, 'read' );
+    //$result = $test->run();
+    //echo '<pre>';
+    //print_r($result);
+    //eZDisplayDebug();
+    //eZExecution::cleanExit();
+    
     if ( $object )
     {
         if ( !$object->attribute( 'can_read' ) )
@@ -305,6 +317,26 @@ function fakeAddObject( $contentObject )
         }
 
         $docList[$languageCode] = $doc;
+        
+        $generalPlugins = eZINI::instance( 'ezfind.ini' )->variable( 'IndexPlugins', 'General' );
+        $classPlugins   = eZINI::instance( 'ezfind.ini' )->variable( 'IndexPlugins', 'Class' );        
+        if ( !empty( $generalPlugins ) )
+        {
+            foreach ( $generalPlugins as $pluginClassString )
+            {
+                if( !class_exists( $pluginClassString ) )
+                {
+                    eZDebug::writeError( "Unable to find the PHP class '$classname' defined for index time plugins for eZ Find", __METHOD__ );
+                    continue;
+                }
+                $plugin = new $pluginClassString;
+                if ( $plugin instanceof ezfIndexPlugin )
+                {
+                    $plugin->modify( $contentObject, $docList );
+                }
+            }
+        }
+        
     }
 
     return $docList;
