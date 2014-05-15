@@ -13,7 +13,8 @@ class SearchFormOperator
         'asort',
         'addQuoteOnFilter',
         'parsedate',
-        'facet_navigation'
+        'facet_navigation',
+        'calendar'
     );
     public static $filters = array();
     public static $query_filters = array();
@@ -106,6 +107,16 @@ class SearchFormOperator
                     'type' => 'string',
                     'required' => true
                 )
+            ),
+            'calendar' => array(
+                'node' => array(
+                    'type' => 'object',
+                    'required' => true
+                ),
+                'parameters' => array(
+                    'type' => 'array',
+                    'required' => false
+                )
             )
         );
     }
@@ -115,6 +126,14 @@ class SearchFormOperator
 		
         switch ( $operatorName )
         {
+            case 'calendar':
+            {
+                $data = new OpenPACalendarData( $namedParameters['node'] );
+                $data->setParameters( $namedParameters['parameters'] );
+                $data->fetch();
+                $operatorValue = $data->data;
+            } break;
+
             case 'facet_navigation':
             {
                 $operatorValue = OCFacetNavgationHelper::data( $namedParameters['base_query'], $namedParameters['override'], $namedParameters['base_uri'] );                
