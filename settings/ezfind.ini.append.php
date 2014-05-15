@@ -1,5 +1,7 @@
 <?php /* #?ini charset="utf-8"?
 
+[IndexPlugins]
+General[]=ezfIndexEventDuration
 
 [IndexOptions]
 OptimizeOnCommit=disabled
