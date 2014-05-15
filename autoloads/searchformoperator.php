@@ -1,41 +1,25 @@
 <?php
-/*!
-  \class   CookieOperator CookieOperator.php
-  \ingroup eZTemplateOperators
-  \brief   Wrapper to handle setting and getting cookies from a template
-  \version 2007.08.30
-  \date    2007.08.30
-  \author  syorex (alex@soyrex.comrerer4)
-  \licence GPL version 2.
-
-*/
-
-include_once( "lib/ezutils/classes/ezini.php" );
-include_once( "lib/ezutils/classes/ezdebug.php" );
 
 class SearchFormOperator
 {
-    /*!
-      Constructor, does nothing by default.
-    */
-    
+    static $Operators = array(
+        'setFilterParameter',
+        'removeFilterParameter',
+        'getFilterParameter',
+        'getFilterParameters',
+        'getFilterUrlSuffix',
+        'in_array_r',
+        'sort',
+        'asort',
+        'addQuoteOnFilter',
+        'parsedate',
+        'facet_navigation'
+    );
     public static $filters = array();
     public static $query_filters = array();
     
     function SearchFormOperator()
     {
-        $this->Operators= array(
-            'setFilterParameter',
-            'removeFilterParameter',
-            'getFilterParameter',
-            'getFilterParameters',
-            'getFilterUrlSuffix',
-            'in_array_r',
-            'sort',
-            'asort',
-            'addQuoteOnFilter',
-            'parsedate'
-        );
     }
 
     /*!
@@ -43,7 +27,7 @@ class SearchFormOperator
     */
     function operatorList()
     {
-        return $this->Operators;
+        return self::$Operators;
     }
     /*!
      \return true to tell the template engine that the parameter list exists per operator type,
@@ -58,58 +42,48 @@ class SearchFormOperator
     */
     function namedParameterList()
     {
-        return array
-        (
+        return array(
             'setFilterParameter' => array(
-                'name' => array
-                (
+                'name' => array(
                     'type' => 'string',
                     'required' => true
                 ),
-                'value' => array
-                (
+                'value' => array(
                     'type' => 'mixed',
                     'required' => true
                 )                
             ),
             'getFilterParameter' => array(
-                'name' => array
-                (
+                'name' => array(
                     'type' => 'string',
                     'required' => true
                 )                
             ),
             'removeFilterParameter' => array(
-                'name' => array
-                (
+                'name' => array(
                     'type' => 'string',
                     'required' => true
                 )                
             ),
             'getFilterParameters' => array(
-                'as_array' => array
-                (
+                'as_array' => array(
                     'type' => 'boolean',
                     'required' => false,
                     'default' => false
                 ),
-                'cond' => array
-                (
+                'cond' => array(
                     'type' => 'string',
                     'required' => false,
                     'default' => false
                 )
             ),
             'getFilterUrlSuffix' => array(),
-            'in_array_r' => array
-            (
-                'needle' => array
-                (
+            'in_array_r' => array(
+                'needle' => array(
                     'type' => 'string',
                     'required' => true
                 ),
-                'haystack' => array
-                (
+                'haystack' => array(
                     'type' => 'array',
                     'required' => true
                 )
@@ -117,8 +91,22 @@ class SearchFormOperator
             'addQuoteOnFilter' => array(),
             'sort' => array(),
             'asort' => array(),
-            'parsedate' => array()
-            
+            'parsedate' => array(),
+            'parsedate' => array(),
+            'facet_navigation' => array(                
+                'base_query' => array(
+                    'type' => 'array',
+                    'required' => true
+                ),
+                'override' => array(
+                    'type' => 'array',
+                    'required' => false
+                ),
+                'base_uri' => array(
+                    'type' => 'string',
+                    'required' => true
+                )
+            )
         );
     }
     
@@ -127,7 +115,11 @@ class SearchFormOperator
 		
         switch ( $operatorName )
         {
-
+            case 'facet_navigation':
+            {
+                $operatorValue = OCFacetNavgationHelper::data( $namedParameters['base_query'], $namedParameters['override'], $namedParameters['base_uri'] );                
+            } break;
+            
             case 'setFilterParameter':
             {
                 self::$filters[$namedParameters['name']][] = $namedParameters['value'];

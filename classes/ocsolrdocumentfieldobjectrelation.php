@@ -191,7 +191,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
             {
                 $metaData[$fieldName] = array( $objectName );
             }
-                      
+
             $baseList = $this->getBaseList( $relatedObject->attribute( 'current' ) );
         
             foreach( $baseList as $field )
@@ -249,7 +249,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                 }
                 $metaData[ezfSolrDocumentFieldBase::generateSubmetaFieldName( $metaInfo['name'], $contentClassAttribute )] = $value;
             }
-            
+
             return $metaData;
         }
     }

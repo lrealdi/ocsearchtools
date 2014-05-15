@@ -8,18 +8,6 @@ else
     $ObjectID = $Params['ObjectID'];
     $searchEngine = new eZSolr();
     $object = eZContentObject::fetch( intval( $ObjectID ) );
-
-    //$tst = OpenTeamMilestone::fromObject( $object );
-    //echo '<pre>';
-    //print_r($tst->attribute('invoices'));
-    //die();
-    
-    //$test = new OpenTeamWhoCan( $object, 'read' );
-    //$result = $test->run();
-    //echo '<pre>';
-    //print_r($result);
-    //eZDisplayDebug();
-    //eZExecution::cleanExit();
     
     if ( $object )
     {
