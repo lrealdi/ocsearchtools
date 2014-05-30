@@ -121,7 +121,7 @@ class ezjsSearchToolsFunctionsJS extends ezjscServerFunctions
             
             $tpl = eZTemplate::factory();
             $tpl->setVariable( 'data', $data );
-            $tpl->setVariable( 'view_parameters', $userParameters );
+            $tpl->setVariable( 'view_parameters', $userParameters );            
             if ( is_array( $contentTpl ) )
             {                
                 foreach( $contentTpl as $key => $value )

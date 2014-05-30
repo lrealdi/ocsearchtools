@@ -13,7 +13,7 @@ class OCFacetNavgationHelper
     /**
      * @var array
      */
-    protected $extraParameters;
+    protected $extraParameters = array();
     
     /**
      * @var array
@@ -86,8 +86,7 @@ class OCFacetNavgationHelper
         $this->query = $query;
         $this->baseUri = $baseUri;
         $this->originalFetchParameters = $fetchParams;
-        $this->fetchParameters = $this->parseFetchParams( $fetchParams );
-        $this->data['base_fetch_json'] = json_encode( $this->fetchParameters );
+        $this->fetchParameters = $this->parseFetchParams( $fetchParams );        
         $this->parseUserParams( $userParameters );        
         $this->data['navigation'] = $this->fetchFacetNavigation();
         $result = $this->fetchResults();
@@ -98,6 +97,7 @@ class OCFacetNavgationHelper
         $this->data['json_params'] = json_encode( $this->originalFetchParameters );
         $this->data['token'] = md5( self::TOKEN . json_encode( $this->originalFetchParameters ) );
         $this->data['query'] = $this->query;
+        $this->data['fetch_paramters'] = $this->fetchParameters;
     }
     
     public static function data( array $fetchParams, array $userParameters, $baseUri, $query = '' )
@@ -214,10 +214,16 @@ class OCFacetNavgationHelper
     {        
         $navigation = array();
         
-        $params = $this->fetchParameters;
+        $params = $this->parseFetchParams( $this->originalFetchParameters );
         $params['SearchLimit'] = 1;
         $params['AsObjects'] = false;
-        $search = self::fetch( $params, $this->query );
+        
+        $search = self::fetch( $params );
+        
+        $paramsForCount = $this->fetchParameters;
+        $paramsForCount['SearchLimit'] = 1;
+        $paramsForCount['AsObjects'] = false;
+        $searchForCount = self::fetch( $paramsForCount, $this->query );
         
         if ( isset( $this->extraParameters['SearchDate'] ) )
         {
@@ -254,7 +260,8 @@ class OCFacetNavgationHelper
             );
         }
         
-        $facetFields = $search['SearchExtras']->attribute( 'facet_fields' );        
+        $facetFields = $search['SearchExtras']->attribute( 'facet_fields' );
+        $facetFieldsForCount = $searchForCount['SearchExtras']->attribute( 'facet_fields' );
         foreach( $this->fetchParameters['Facet'] as $key => $names )
         {
             $navigation[$names['name']] = array();
@@ -262,11 +269,11 @@ class OCFacetNavgationHelper
             {
                 $navigationValues = array();
                 $navigationValues['name'] = $term;
-                if ( strpos( $query, 'yearmonth____dt' ) )
+                if ( strpos( $query, 'yearmonth____dt' ) !== false)
                 {
                     $navigationValues['name'] = DateTime::createFromFormat( "Y-m-d\TH:i:sP", $term )->format ("F Y");
                 }
-                if ( strpos( $query, 'year____dt' ) )
+                if ( strpos( $query, 'year____dt' ) !== false )
                 {
                     $navigationValues['name'] = DateTime::createFromFormat( "Y-m-d\TH:i:sP", $term )->format ("Y");
                 }                
@@ -286,16 +293,27 @@ class OCFacetNavgationHelper
                 
                 $navigation[$names['name']][$term] = $navigationValues;
             }
+
+            if ( isset( $facetFieldsForCount[$key] ) )
+            {
+                foreach( $facetFieldsForCount[$key]['countList'] as $term => $count )
+                {                
+                    $navigation[$names['name']][$term]['count'] = $count;
+                }
+            }
+            
             foreach( $facetFields[$key]['countList'] as $term => $count )
             {                
-                $navigation[$names['name']][$term]['count'] = $count;
+                if ( !isset( $navigation[$names['name']][$term]['count'] ) )
+                {
+                    $navigation[$names['name']][$term]['count'] = 0;
+                }
             }
             foreach( $facetFields[$key]['nameList'] as $term => $name )
             {                
                 $navigation[$names['name']][$term]['query'] = $name;
             }
         }
-        
         return $navigation;
     }
     

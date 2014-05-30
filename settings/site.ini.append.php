@@ -1,5 +1,4 @@
-<?php
-/*
+<?php/*
 
 [TemplateSettings]
 ExtensionAutoloadPath[]=ocsearchtools
@@ -15,5 +14,7 @@ ExtensionAutoloadPath[]=ocsearchtools
 #destinatario=ezobjectrelationlist_checkbox
 #date_timestamp=disabled
 
-*/
-?>
+[RoleSettings]
+PolicyOmitList[]=facet/proxy
+
+*/?>

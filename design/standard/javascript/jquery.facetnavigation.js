@@ -1,22 +1,40 @@
 ;(function ( $, window, document, undefined ) {
 
+    jQuery.fn.putCursorAtEnd = function() {
+      return this.each(function() {
+        $(this).focus()
+        if (this.setSelectionRange) {
+          var len = $(this).val().length * 2;
+          this.setSelectionRange(len, len);
+        } else {
+          $(this).val($(this).val());
+        }
+        this.scrollTop = 999999;
+      });
+    };
+
     var pluginName = "facetnavigation",
         defaults = {
+            useForm: false,
             navigationContainer: ".nav-facets",            
             paginationContainer: ".pagination",
+            formContainer: ".form-facets",
             contentContainer: ".facet-content",
-            inputId: "searchfacet",
+            inputId: "#searchfacet",
             template:{
                 content: {
                     name: "parts/children-facet.tpl",
                     view: "line",
-                    pageLimit: 10
+                    page_limit: 10
                 },
                 navigation: "nav/nav-section-facet.tpl",
             },
             json: '',
             token: '',
-            eZJsCoreCallMethod: 'ocst::facetnavigation'
+            eZJsCoreCallMethod: 'ocst::facetnavigation',
+            chosen: {
+                allow_single_deselect:true
+            }
         };
         
     var timeout;
@@ -27,12 +45,22 @@
         this._defaults = defaults;
         this._name = pluginName;        
         this.selectedParameters = {};
-        var currentParameters = {};
-        $( this.settings.navigationContainer + ' a.active' ).each(function(){
-            var key = $(this).data( 'key' ),
-                value = $(this).data( 'value' );
-            currentParameters[key] = value;
-        });
+        this.useForm = this.settings.useForm;
+        var currentParameters = {};        
+        if (this.useForm) {
+            var form = $( this.settings.formContainer, $(this.element) ).serializeArray();
+            $.each(form, function(){            
+                if (this.value != '') {
+                    currentParameters[this.name] = this.value;
+                }            
+            });
+        }else{
+            $( this.settings.navigationContainer + ' a.active', $(this.element) ).each(function(){
+                var key = $(this).data( 'key' ),
+                    value = $(this).data( 'value' );
+                currentParameters[key] = value;
+            });
+        }
         this.currentParameters = currentParameters;
         this.init();
     }
@@ -40,13 +68,24 @@
     FacetNavigation.prototype = {
         init: function () {            
             var self = this;                        
-            var input = '#' + $(this.element).attr('id') + ' input#' + this.settings.inputId;
-            var nav = '#' + $(this.element).attr('id') + ' ' + this.settings.navigationContainer + ' a, ' + '#' + $(this.element).attr('id') + ' ' + this.settings.paginationContainer + ' a';
+            var input = '#' + $(this.element).attr('id') + ' input' + this.settings.inputId;
+            var nav = '#' + $(this.element).attr('id') + ' ' + this.settings.navigationContainer + ' a';
+            var pagination = '#' + $(this.element).attr('id') + ' ' + this.settings.paginationContainer + ' a';
             $(input).show();            
-            $(document).on( 'keyup', input, self, this.onInput );            
-            $(document).on( 'click', nav, self, this.onClick );
+            $(document).on( 'keyup', input, self, this.onInput );
+            $(document).on( 'click', this.settings.inputId+'clear', self, this.onClearInput );
+            $(document).on( 'click', pagination, self, this.onClick );
+            if (this.useForm) {                
+                //$(document).on( 'submit', this.settings.formContainer, self, this.onSubmit );
+                $(this.settings.formContainer + ' button[type="submit"]', $(this.element)).hide();
+                $(document).on( 'change', this.settings.formContainer + " select", self, this.onSubmit );
+            }else{
+                $(document).on( 'click', nav, self, this.onClick );
+            }                        
+            $(this.settings.formContainer + " select", $(this.element)).chosen(this.settings.chosen);            
         },
         fetch: function(){                        
+            var self = this;
             var settings = this.settings;
             var  data = {
                 json: settings.json,                
@@ -58,24 +97,28 @@
                 if (response.error_text != '') {
                     alert(response.error_text);
                 }else{
-                    $( settings.navigationContainer ).replaceWith( response.content.navigation );
-                    $( settings.contentContainer ).replaceWith( response.content.content );
+                    $(settings.navigationContainer).replaceWith( response.content.navigation );
+                    $(settings.contentContainer).replaceWith( response.content.content );                    
+                    $(settings.navigationContainer + " .facet-select").chosen(self.settings.chosen);
+                    $(settings.inputId).putCursorAtEnd();
+                    $(settings.formContainer + ' button[type="submit"]', $(self.element)).hide();
                 }
             });
         },
         onClick: function (event) {
-            var self = event.data;
-            if ( typeof $(event.target).data( 'key' ) !== 'undefined' ) {
-                var key = $(event.target).data( 'key' ),
-                    value = $(event.target).data( 'value' );
-                if ( $(event.target).hasClass( 'active' ) ){                    
+            var self = event.data;            
+            var target = $(event.target).closest('a');
+            if ( typeof target.data( 'key' ) !== 'undefined' ) {
+                var key = target.data( 'key' ),
+                    value = target.data( 'value' );
+                if ( target.hasClass( 'active' ) ){                    
                     self.selectedParameters[key] = null;
                 }
                 else{                    
                     self.selectedParameters[key] = value;                
                 }
             }else{                
-                var parts = $(event.target).closest('a').attr( 'href' ).split('/(offset)/');                
+                var parts = target.closest('a').attr( 'href' ).split('/(offset)/');                
                 if (typeof parts[1] !== 'undefined' ) {
                     var splitParts = parts[1].split( '/' );
                     self.selectedParameters.offset = splitParts[0]; 
@@ -86,8 +129,19 @@
             self.fetch();
             event.preventDefault();
         },
-        onInput: function (event) {            
+        onSubmit: function (event) {
             var self = event.data;
+            $(self.settings.formContainer + " select", $(self.element)).trigger("chosen:updated");            
+            var form = $( self.settings.formContainer, $(self.element) ).serializeArray();      
+            $.each(form, function(){            
+                self.currentParameters[this.name] = null;
+                self.selectedParameters[this.name] = this.value;
+            });
+            self.fetch();
+            event.preventDefault();
+        },
+        onInput: function (event) {            
+            var self = event.data;            
             var queryString = $(event.target).val();                        
             self.selectedParameters.query = queryString;
             if( timeout ) {
@@ -97,6 +151,13 @@
             var delay = function() { self.fetch(); };
             timeout = setTimeout(delay, 600);            
         },
+        onClearInput: function(event){        
+            var self = event.data;  
+            var input = '#' + $(self.element).attr('id') + ' input' + self.settings.inputId;
+            $(input).val('');
+            self.selectedParameters.query = null;
+            self.fetch();        
+        }
     };
 
     $.fn[ pluginName ] = function ( options ) {                
