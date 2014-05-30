@@ -128,7 +128,7 @@ class SearchFormOperator
         {
             case 'calendar':
             {
-                $data = new OpenPACalendarData( $namedParameters['node'] );
+                $data = new OCCalendarData( $namedParameters['node'] );
                 $data->setParameters( $namedParameters['parameters'] );
                 $data->fetch();
                 $operatorValue = $data->data;

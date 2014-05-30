@@ -3,6 +3,8 @@
 class OCFacetNavgationHelper
 {
     
+    const TOKEN = 'questotokenèsegretissimo';
+    
     /**
      * @var array
      */
@@ -26,6 +28,11 @@ class OCFacetNavgationHelper
     /**
      * @var array
      */
+    public $originalFetchParameters  = array();
+    
+    /**
+     * @var array
+     */
     public $data = array();
     
     /**
@@ -37,6 +44,11 @@ class OCFacetNavgationHelper
      * @var string
      */
     public $queryUri = array();
+    
+    /**
+     * @var string
+     */
+    public $query = '';
     
     public $allowedUserParamters = array( 'offset' );
 
@@ -69,9 +81,11 @@ class OCFacetNavgationHelper
      * @param array $userFilters
      * @param string $baseUri
      */
-    protected function __construct( array $fetchParams, array $userParameters, $baseUri )
+    protected function __construct( array $fetchParams, array $userParameters, $baseUri, $query = '' )
     {
+        $this->query = $query;
         $this->baseUri = $baseUri;
+        $this->originalFetchParameters = $fetchParams;
         $this->fetchParameters = $this->parseFetchParams( $fetchParams );
         $this->data['base_fetch_json'] = json_encode( $this->fetchParameters );
         $this->parseUserParams( $userParameters );        
@@ -81,12 +95,20 @@ class OCFacetNavgationHelper
         $this->data['count'] = $result['count'];
         $this->data['uri'] = $this->getUriString( $this->queryUri );        
         $this->data['base_uri'] = $this->baseUri;
+        $this->data['json_params'] = json_encode( $this->originalFetchParameters );
+        $this->data['token'] = md5( self::TOKEN . json_encode( $this->originalFetchParameters ) );
+        $this->data['query'] = $this->query;
     }
     
-    public static function data( array $fetchParams, array $userParameters, $baseUri )
+    public static function data( array $fetchParams, array $userParameters, $baseUri, $query = '' )
     {
-        $self = new self( $fetchParams, $userParameters, $baseUri );
+        $self = new self( $fetchParams, $userParameters, $baseUri, $query );
         return $self->data;
+    }
+    
+    public static function validateToken( $token, $fetchParams )
+    {
+        return $token == md5( self::TOKEN . json_encode( $fetchParams ) );
     }
     
     protected function encodeValue( $value )
@@ -195,7 +217,7 @@ class OCFacetNavgationHelper
         $params = $this->fetchParameters;
         $params['SearchLimit'] = 1;
         $params['AsObjects'] = false;
-        $search = self::fetch( $params );
+        $search = self::fetch( $params, $this->query );
         
         if ( isset( $this->extraParameters['SearchDate'] ) )
         {
@@ -279,7 +301,7 @@ class OCFacetNavgationHelper
     
     protected function fetchResults()
     {
-        $search = self::fetch( $this->fetchParameters );
+        $search = self::fetch( $this->fetchParameters, $this->query );
         return array(
             'contents' => $search['SearchResult'],
             'count' => $search['SearchCount']

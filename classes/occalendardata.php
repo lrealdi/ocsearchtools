@@ -326,7 +326,7 @@ class OCCalendarData
         foreach( $byDayPeriod as $date )
         {
             $identifier = $date->format( self::FULLDAY_IDENTIFIER_FORMAT );            
-            $calendarDay = new OpenPACalendarDay( $identifier );            
+            $calendarDay = new OCCalendarDay( $identifier );            
             $calendarDay->addEvents( $events );
             $eventsByDay[$identifier] = $calendarDay;            
         }
