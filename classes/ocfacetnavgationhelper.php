@@ -243,19 +243,22 @@ class OCFacetNavgationHelper
                     'name' => ezpI18n::tr( "design/standard/content/search", "Last day" ),
                     'url' =>  $activeSearchDate == "1" ? $this->removeFromQueryUri( $this->queryUri, $nameEncoded, $termEncoded ) : $this->addToQueryUri( $this->queryUri, $nameEncoded, 1 ),
                     'active' =>  $activeSearchDate == "1" ? true : false,
-                    'count' => false
+                    'count' => false,
+                    'query' => 1
                 ),
                 ezpI18n::tr( "design/standard/content/search", "Last week" ) => array(
                     'name' => ezpI18n::tr( "design/standard/content/search", "Last week" ),
                     'url' =>  $activeSearchDate == "2" ? $this->removeFromQueryUri( $this->queryUri, $nameEncoded, $termEncoded ) : $this->addToQueryUri( $this->queryUri, $nameEncoded, 2 ),
                     'active' =>  $activeSearchDate == "2" ? true : false,
-                    'count' => false
+                    'count' => false,
+                    'query' => 2
                 ),
                 ezpI18n::tr( "design/standard/content/search", "Last month" ) => array(
                     'name' => ezpI18n::tr( "design/standard/content/search", "Last month" ),
                     'url' =>  $activeSearchDate == "3" ? $this->removeFromQueryUri( $this->queryUri, $nameEncoded, $termEncoded ) : $this->addToQueryUri( $this->queryUri, $nameEncoded, 3 ),
                     'active' =>  $activeSearchDate == "3" ? true : false,
-                    'count' => false
+                    'count' => false,
+                    'query' => 3
                 ),
             );
         }
@@ -311,7 +314,7 @@ class OCFacetNavgationHelper
             }
             foreach( $facetFields[$key]['nameList'] as $term => $name )
             {                
-                $navigation[$names['name']][$term]['query'] = $name;
+                $navigation[$names['name']][$term]['query'] = trim( $name, '"' );
             }
         }
         return $navigation;
