@@ -147,7 +147,7 @@ class ezjsSearchToolsFunctionsJS extends ezjscServerFunctions
             return array(
                 'content' => $content,
                 'navigation' => $navigation,
-                //'debug' => $data
+                'fetch_paramters' => $data['fetch_paramters']
             );
         }
         else

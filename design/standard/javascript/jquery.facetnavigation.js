@@ -37,7 +37,8 @@
             }
         };
         
-    var timeout;
+    //var timeout;
+    var tooltip;
 
     function FacetNavigation ( element, options ) {
         this.element = element;
@@ -72,7 +73,14 @@
             var nav = '#' + $(this.element).attr('id') + ' ' + this.settings.navigationContainer + ' a';
             var pagination = '#' + $(this.element).attr('id') + ' ' + this.settings.paginationContainer + ' a';
             $(input).show();            
-            $(document).on( 'keyup', input, self, this.onInput );
+            $(document)
+                .on( 'keyup', input, self, this.onInput )
+                .on( 'keydown', function(event){ if(event.keyCode == 13) event.preventDefault(); });
+            $(window).on( 'keydown', function(event){
+                if(event.keyCode == 13) {
+                    event.preventDefault();
+                }
+            });
             $(document).on( 'click', this.settings.inputId+'clear', self, this.onClearInput );
             $(document).on( 'click', pagination, self, this.onClick );
             if (this.useForm) {                
@@ -85,6 +93,7 @@
             $(this.settings.formContainer + " select", $(this.element)).chosen(this.settings.chosen);            
         },
         fetch: function(){                        
+            tooltip = null;
             var self = this;
             var settings = this.settings;
             var  data = {
@@ -144,19 +153,36 @@
             var self = event.data;            
             var queryString = $(event.target).val();                        
             self.selectedParameters.query = queryString;
-            if( timeout ) {
-                clearTimeout( timeout );
-                timeout = null;
+            self.selectedParameters.sort_by = {score:'desc'};
+            if (queryString.length == 0) {
+                tooltip = null;
+                self.selectedParameters.sort_by = null;
             }
-            var delay = function() { self.fetch(); };
-            timeout = setTimeout(delay, 600);            
+            if (tooltip == null && queryString.length > 0) {
+                tooltip = true;
+                $(event.target)
+                    .popover({placement:'top'})
+                    .popover('show')
+            }
+            //if( timeout ) {
+            //    clearTimeout( timeout );
+            //    timeout = null;
+            //}
+            //var delay = function() { self.fetch(); };
+            //timeout = setTimeout(delay, 600);            
+            if(event.keyCode == 13) {
+                self.fetch();                
+            }            
+            event.preventDefault();
         },
         onClearInput: function(event){        
             var self = event.data;  
             var input = '#' + $(self.element).attr('id') + ' input' + self.settings.inputId;
             $(input).val('');
             self.selectedParameters.query = null;
-            self.fetch();        
+            self.selectedParameters.sort_by = null;
+            self.fetch();
+            tooltip = null;
         }
     };
 

@@ -28,7 +28,6 @@ foreach( $parameters as $key => $value )
     if ( $key != '' && $value != '' )
         $redirect .= "/({$key})/{$value}";
 }
-
 $module->redirectTo( $redirect . $redirectSuffix );
 
 ?>

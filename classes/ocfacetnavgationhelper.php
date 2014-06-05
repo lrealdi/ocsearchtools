@@ -50,7 +50,7 @@ class OCFacetNavgationHelper
      */
     public $query = '';
     
-    public $allowedUserParamters = array( 'offset' );
+    public $allowedUserParamters = array( 'offset', 'sort_by' );
 
     private $mapper = array(
         'offset' => 'SearchOffset',
@@ -161,6 +161,10 @@ class OCFacetNavgationHelper
                 {
                     $this->fetchParameters[$filter] = $value;
                 }
+            }
+            if ( $key == 'query' && $this->query == '' )
+            {
+                $this->query = $value;               
             }
         }         
     }
