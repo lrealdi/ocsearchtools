@@ -16,5 +16,6 @@ ExtensionAutoloadPath[]=ocsearchtools
 
 [RoleSettings]
 PolicyOmitList[]=facet/proxy
+PolicyOmitList[]=calendar/view
 
 */?>

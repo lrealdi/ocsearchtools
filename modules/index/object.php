@@ -75,7 +75,7 @@ else
                     $dom->preserveWhiteSpace = FALSE;
                     $dom->loadXML( $doc->docToXML() );
                     $dom->formatOutput = TRUE;
-                    echo '<pre style="border: 1px solid rgb(204, 204, 204); background: none repeat scroll 0% 0% rgb(238, 238, 238); border-radius: 5px 5px 5px 5px; padding: 10px;">' . htmlentities( $dom->saveXML( $dom->RootElement ) ) . '</pre>';
+                    echo '<pre style="border: 1px solid rgb(204, 204, 204); background: none repeat scroll 0% 0% rgb(238, 238, 238); border-radius: 5px 5px 5px 5px; padding: 10px;">' . htmlentities( $dom->saveXML( $dom->documentElement ) ) . '</pre>';
                 }
             }
         }
@@ -323,7 +323,20 @@ function fakeAddObject( $contentObject )
                     $plugin->modify( $contentObject, $docList );
                 }
             }
+        }        
+        if (array_key_exists($contentObject->attribute( 'class_identifier' ), $classPlugins ) )
+        {
+            $pluginClassString = $classPlugins[$contentObject->attribute( 'class_identifier' )];
+            if ( class_exists( $pluginClassString ) )
+            {
+                $plugin = new $pluginClassString;
+                if ($plugin instanceof ezfIndexPlugin)
+                {
+                        $plugin->modify( $contentObject, $docList );
+                }
+            }
         }
+
         
     }
 
