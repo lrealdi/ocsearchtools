@@ -269,11 +269,14 @@ class OCFacetNavgationHelper
         
         $facetFields = $search['SearchExtras']->attribute( 'facet_fields' );
         $facetFieldsForCount = $searchForCount['SearchExtras']->attribute( 'facet_fields' );
+
         foreach( $this->fetchParameters['Facet'] as $key => $names )
-        {
+        {            
             $navigation[$names['name']] = array();
             foreach( $facetFields[$key]['queryLimit'] as $term => $query )
             {
+                if ( empty( $term ) ) continue;
+                
                 $navigationValues = array();
                 $navigationValues['name'] = $term;
                 if ( strpos( $query, 'yearmonth____dt' ) !== false)
@@ -300,27 +303,73 @@ class OCFacetNavgationHelper
                 
                 $navigation[$names['name']][$term] = $navigationValues;
             }
+            
+            foreach( $facetFields[$key]['countList'] as $term => $count )
+            {                
+                if ( empty( $term ) ) continue;
+                $navigation[$names['name']][$term]['count'] = 0;
+            }
+            
+            foreach( $facetFields[$key]['nameList'] as $term => $name )
+            {                
+                if ( empty( $term ) ) continue;
+                $navigation[$names['name']][$term]['query'] = trim( $name, '"' );
+            }
 
             if ( isset( $facetFieldsForCount[$key] ) )
             {
                 foreach( $facetFieldsForCount[$key]['countList'] as $term => $count )
                 {                
+                    if ( empty( $term ) ) continue;
                     $navigation[$names['name']][$term]['count'] = $count;
+                    if ( !isset( $navigation[$names['name']][$term]['count'] ) )
+                    {
+                        $navigation[$names['name']][$term]['count'] = $count;    
+                    }
+                    if ( !isset( $navigation[$names['name']][$term]['name'] ) )
+                    {
+                        $navigation[$names['name']][$term]['name'] = $term;    
+                    }
+                }
+                foreach( $facetFieldsForCount[$key]['nameList'] as $term => $name )
+                {                
+                    if ( empty( $term ) ) continue;
+                    if ( !isset( $navigation[$names['name']][$term]['query'] ) )
+                    {
+                        $navigation[$names['name']][$term]['query'] = trim( $name, '"' );
+                    }
+                }
+                foreach( $facetFieldsForCount[$key]['queryLimit'] as $term => $query )
+                {                
+                    if ( empty( $term ) ) continue;
+                    $nameEncoded = $this->encodeKey( $names['name'] );
+                    $termEncoded = $this->encodeValue( $term );
+                    if ( !isset( $navigation[$names['name']][$term]['active'] ) )
+                    {
+                        if ( isset( $this->queryUri[$nameEncoded] ) && $this->queryUri[$nameEncoded] == $termEncoded )
+                        {
+                            $navigation[$names['name']][$term]['active'] = true;                            
+                        }
+                        else
+                        {
+                            $navigation[$names['name']][$term]['active'] = false;                            
+                        }   
+                    }
+                    if ( !isset( $navigation[$names['name']][$term]['url'] ) )
+                    {
+                        if ( isset( $this->queryUri[$nameEncoded] ) && $this->queryUri[$nameEncoded] == $termEncoded )
+                        {                            
+                            $navigation[$names['name']][$term]['url'] = $this->removeFromQueryUri( $this->queryUri, $nameEncoded, $termEncoded );
+                        }
+                        else
+                        {                            
+                            $navigation[$names['name']][$term]['url'] = $this->addToQueryUri( $this->queryUri, $nameEncoded, $termEncoded );
+                        }   
+                    }
                 }
             }
-            
-            foreach( $facetFields[$key]['countList'] as $term => $count )
-            {                
-                if ( !isset( $navigation[$names['name']][$term]['count'] ) )
-                {
-                    $navigation[$names['name']][$term]['count'] = 0;
-                }
-            }
-            foreach( $facetFields[$key]['nameList'] as $term => $name )
-            {                
-                $navigation[$names['name']][$term]['query'] = trim( $name, '"' );
-            }
-        }
+
+        }    
         return $navigation;
     }
     
