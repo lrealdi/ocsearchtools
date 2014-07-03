@@ -13,6 +13,7 @@ class SearchFormOperator
         'asort',
         'addQuoteOnFilter',
         'parsedate',
+        'strtotime',
         'facet_navigation',
         'calendar'
     );
@@ -126,6 +127,12 @@ class SearchFormOperator
 		
         switch ( $operatorName )
         {
+
+            case 'strtotime':
+            {
+                $operatorValue = strtotime( $operatorValue );
+            } break;
+
             case 'calendar':
             {
                 $data = new OCCalendarData( $namedParameters['node'] );
