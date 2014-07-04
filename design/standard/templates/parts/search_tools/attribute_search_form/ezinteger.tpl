@@ -1,11 +1,7 @@
 {def $filterParameters = getFilterParameters( true() )
-     $tmpSearch = fetch(ezfind,search,
-                    hash(
-                        'class_id', $class.id,
-                        'facet', array(
-                            hash( 'field', concat( $class.identifier, '/', $attribute.identifier ), 'limit', 1500 )
-                        )
-                    ))
+     $tmpSearch = fetch(ezfind,search, hash( 'class_id', $class.id,
+                                             'facet', array( hash( 'field', concat( $class.identifier, '/', $attribute.identifier ), 'limit', 1500 ))
+                                           ))
     $options = $tmpSearch['SearchExtras']['facet_fields'][0]['nameList']|sort()
   }
 <div class="search_form_attribute {$attribute.identifier}">

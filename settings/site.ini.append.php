@@ -3,8 +3,6 @@
 [TemplateSettings]
 ExtensionAutoloadPath[]=ocsearchtools
 
-#[SearchFormSettings]
-#ClassFormSetting[]=letter
 
 #[letter_AttributeFormSettings]
 #mese=disabled
