@@ -230,9 +230,22 @@ class OCFacetNavgationHelper
         return $baseUrl;
     }
     
-    protected static function mergeFacetsInNavigationList( $facets, $facetFields1, $facetFields2 )
+    protected static function mergeFacetsInNavigationList( $facets, $facetFields1, $facetFields2, $overrideCount = null, $extraParameters = array(), &$queryUrl = '', &$baseUrl = '' )
     {
         $navigation = array();
+        
+        if ( $overrideCount === null )
+        {
+            foreach( $facets as $key => $names )
+            {
+                if ( isset( $facetFields2[$key]['countList'] ) && !empty( $facetFields2[$key]['countList'] ) )
+                {
+                    $overrideCount = true;
+                    break;
+                }
+            }
+        }
+        
         foreach( $facets as $key => $names )
         {            
             $navigation[$names['name']] = array();
@@ -273,7 +286,7 @@ class OCFacetNavgationHelper
                 $navigation[$names['name']][$term]['query'] = trim( $name, '"' );
             }
 
-            if ( isset( $facetFields2[$key]['countList'] ) && !empty( $facetFields2[$key]['countList'] ) )
+            if ( $overrideCount )
             {
                 foreach( $facetFields1[$key]['countList'] as $term => $count )
                 {                
@@ -298,7 +311,7 @@ class OCFacetNavgationHelper
         return $navigation; 
     }
     
-    public static function navigationList( $absoluteParams, $relativeParams, $query = '', $extraParameters = array(), &$queryUrl = '', &$baseUrl = ''  )
+    public static function navigationList( $absoluteParams, $relativeParams, $query = '', $overrideCount = null, $extraParameters = array(), &$queryUrl = '', &$baseUrl = ''  )
     {
         $navigation = array();
         
@@ -355,7 +368,7 @@ class OCFacetNavgationHelper
         $facetFields = $search['SearchExtras']->attribute( 'facet_fields' );
         $facetFieldsForCount = isset( $searchForCount['SearchExtras'] ) ? $searchForCount['SearchExtras']->attribute( 'facet_fields' ) : array();
 
-        return self::mergeFacetsInNavigationList( $absoluteParams['Facet'], $facetFields, $facetFieldsForCount );
+        return array_merge( $navigation, self::mergeFacetsInNavigationList( $absoluteParams['Facet'], $facetFields, $facetFieldsForCount, $overrideCount, $extraParameters, $queryUrl, $baseUrl ) );
     }
     
     public static function map( $parameters )
@@ -374,8 +387,19 @@ class OCFacetNavgationHelper
     protected function fetchFacetNavigation()
     {        
         $params = $this->parseFetchParams( $this->originalFetchParameters );
-        $paramsForCount = $this->fetchParameters;           
-        return self::navigationList( $params, $paramsForCount, $this->query, $this->extraParameters, $this->queryUri, $this->baseUri );
+        $paramsForCount = $this->fetchParameters;
+        
+        $overrideCount = false;
+        foreach( $facets as $key => $names )
+        {
+            if ( isset( $facetFields2[$key]['countList'] ) && !empty( $facetFields2[$key]['countList'] ) )
+            {
+                $overrideCount = true;
+                break;
+            }
+        }
+        
+        return self::navigationList( $params, $paramsForCount, $this->query, null, $this->extraParameters, $this->queryUri, $this->baseUri );
     }
     
     protected function fetchResults()

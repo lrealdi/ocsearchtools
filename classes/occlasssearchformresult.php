@@ -150,7 +150,7 @@ class OCClassSearchFormResult
         return $this->baseParameters;
     }
     
-    protected function isFetch()
+    public function isFetch()
     {
         $this->buildFetch();
         return $this->isFetch;

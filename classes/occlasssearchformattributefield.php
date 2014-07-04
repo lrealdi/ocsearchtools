@@ -60,7 +60,7 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
             }
             
             $params = array_merge( $currentParameters, $scopeParameters );
-            $data = OCFacetNavgationHelper::navigationList( $scopeParameters, $currentParameters, OCClassSearchFormHelper::result()->searchText );
+            $data = OCFacetNavgationHelper::navigationList( $scopeParameters, $currentParameters, OCClassSearchFormHelper::result()->searchText, OCClassSearchFormHelper::result()->isFetch() );
 
             if ( isset( $data[$this->attributes['name']] ) )
             {
