@@ -15,6 +15,9 @@ class SearchFormOperator
         'parsedate',
         'strtotime',
         'facet_navigation',
+        'class_search_form',
+        'attribute_search_form',
+        'class_search_result',
         'calendar'
     );
     public static $filters = array();
@@ -118,6 +121,38 @@ class SearchFormOperator
                     'type' => 'array',
                     'required' => false
                 )
+            ),
+            'class_search_form' => array(
+                'class_identifier' => array(
+                    'type' => 'string',
+                    'required' => true
+                ),
+                'parameters' => array(
+                    'type' => 'array',
+                    'required' => false,
+                    'default' => array()
+                )
+            ),
+            'attribute_search_form' => array(
+                'helper' => array(
+                    'type' => 'object',
+                    'required' => true
+                ),
+                'input_field' => array(
+                    'type' => 'object',
+                    'required' => false,
+                    'default' => array()
+                )
+            ),
+            'class_search_result' => array(
+                'parameters' => array(
+                    'type' => 'array',
+                    'required' => true
+                ),
+                'fields' => array(
+                    'type' => 'array',
+                    'required' => true
+                )
             )
         );
     }
@@ -127,7 +162,43 @@ class SearchFormOperator
 		
         switch ( $operatorName )
         {
-
+            
+            case 'class_search_result':
+            {                
+                try
+                {
+                    $operatorValue = OCClassSearchFormHelper::result( $namedParameters['parameters'], $namedParameters['fields'], true );
+                }
+                catch( Exception $e )
+                {
+                    eZDebug::writeError( $e->getMessage(), $operatorName );
+                }
+            } break;
+            
+            case 'attribute_search_form':
+            {                
+                try
+                {
+                    $operatorValue = OCClassSearchFormHelper::displayAttribute( $namedParameters['helper'], $namedParameters['input_field'] );
+                }
+                catch( Exception $e )
+                {
+                    eZDebug::writeError( $e->getMessage(), $operatorName );
+                }
+            } break;
+            
+            case 'class_search_form':
+            {                
+                try
+                {
+                    $operatorValue = OCClassSearchFormHelper::displayForm( $namedParameters['class_identifier'], $namedParameters['parameters'] );
+                }
+                catch( Exception $e )
+                {
+                    eZDebug::writeError( $e->getMessage(), $operatorName );
+                }
+            } break;
+            
             case 'strtotime':
             {
                 $operatorValue = strtotime( $operatorValue );
