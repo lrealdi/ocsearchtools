@@ -1,7 +1,16 @@
 <?php
 
 $module = $Params['Module'];
-eZDebug::writeNotice( $_GET, __FILE__ );
-OCClassSearchFormHelper::redirect( $_GET, $module );
+
+if ( $Params['AjaxCall'] )
+{
+    //@todo
+    eZExecution::cleanExit();
+}
+else
+{
+    OCClassSearchFormHelper::redirect( $_GET, $module );    
+}
+
 
 ?>

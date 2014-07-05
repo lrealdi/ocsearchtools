@@ -31,11 +31,9 @@ class OCClassSearchFormHelper
                 }
             }
             
-            $redirect = rtrim( $redirect, '/' ) . $result->getViewParametersString();            
+            $redirect = rtrim( $redirect, '/' ) . $result->getViewParametersString();
             $module->redirectTo( $redirect );
         }
-                
-        self::$_result = $result;
     }
     
     public static function displayForm( $classIdentifier, $parameters )

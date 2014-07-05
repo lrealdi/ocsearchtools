@@ -4,7 +4,7 @@
   sort_form html tpl @todo
   published_form html tpl @todo
 *}
-<form method="get" action="{'/ocsearch/action'|ezurl( 'no' )}">
+<form name="{concat('class_search_form_',$helper.class.identifier)}" method="get" action="{'/ocsearch/action'|ezurl( 'no' )}">
     
   {include uri='design:class_search_form/query.tpl' helper=$helper input=$helper.query_field}
   

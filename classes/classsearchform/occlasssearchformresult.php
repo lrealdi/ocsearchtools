@@ -83,6 +83,20 @@ class OCClassSearchFormResult
         return $value;
     }
 
+    protected function addFetchField( $fieldArray )
+    {
+        foreach( $this->fetchFields as $field )
+        {
+            if ( $field['name'] == $fieldArray['name']
+                 && $field['value'] == $fieldArray['value']
+                 && $field['remove_view_parameters'] == $fieldArray['remove_view_parameters'] )
+            {
+                return false;
+            }
+        }
+        $this->fetchFields[] = $fieldArray;
+    }
+    
     public function buildFetch()
     {
         $filters = array();
@@ -116,11 +130,11 @@ class OCClassSearchFormResult
                     $filters[] = $fieldName . ':' . $this->encode( $value, $addQuote );
                 }                
                 $this->isFetch = true;
-                $this->fetchFields[] = array(
+                $this->addFetchField( array(
                     'name' => $contentClassAttribute->attribute( 'name' ),
                     'value' => $value,
                     'remove_view_parameters' => $this->getViewParametersString( array( $key ) )
-                );
+                ) );
             }
             elseif ( in_array( $key, OCFacetNavgationHelper::$allowedUserParamters ) )
             {
@@ -133,11 +147,11 @@ class OCClassSearchFormResult
             elseif ( $key == 'class_id' )
             {
                 $this->baseParameters[$key] = $value;
-                $this->fetchFields[] = array(
+                $this->addFetchField( array(
                     'name' => ezpI18n::tr( 'extension/ezfind/facets', 'Content type' ),
                     'value' => eZContentClass::fetch( $value )->attribute( 'name' ),
                     'remove_view_parameters' => $this->getViewParametersString( array( $key ) )
-                );
+                ) );
                 $this->isFetch = true;
             }
             elseif ( $key == 'query' )

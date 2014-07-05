@@ -6,7 +6,7 @@ $ViewList = array();
 $ViewList['action'] = array(
     'functions' => array( 'action' ),
     'script' => 'action.php',
-    'params' => array(),
+    'params' => array( 'AjaxCall' ),
     'unordered_params' => array()
 );
 
