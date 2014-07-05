@@ -82,7 +82,7 @@
                 }
             });
             $(document).on( 'click', this.settings.inputId+'clear', self, this.onClearInput );
-            $(document).on( 'click', pagination, self, this.onClick );
+            $(document).on( 'click', pagination, self, this.onPaginationClick );
             if (this.useForm) {                
                 //$(document).on( 'submit', this.settings.formContainer, self, this.onSubmit );
                 $(this.settings.formContainer + ' button[type="submit"]', $(this.element)).hide();
@@ -138,6 +138,30 @@
             self.fetch();
             event.preventDefault();
         },
+        onPaginationClick: function (event) {
+            var self = event.data;            
+            var target = $(event.target).closest('a');
+            if ( typeof target.data( 'key' ) !== 'undefined' ) {
+                var key = target.data( 'key' ),
+                    value = target.data( 'value' );
+                if ( target.hasClass( 'active' ) ){                    
+                    self.selectedParameters[key] = null;
+                }
+                else{                    
+                    self.selectedParameters[key] = value;                
+                }
+            }else{                
+                var parts = target.closest('a').attr( 'href' ).split('/(offset)/');                
+                if (typeof parts[1] !== 'undefined' ) {
+                    var splitParts = parts[1].split( '/' );
+                    self.selectedParameters.offset = splitParts[0]; 
+                }else{
+                    self.selectedParameters.offset = null;
+                }
+            }
+            self.fetch();
+            event.preventDefault();
+        },
         onSubmit: function (event) {
             var self = event.data;
             $(self.settings.formContainer + " select", $(self.element)).trigger("chosen:updated");            
@@ -146,6 +170,7 @@
                 self.currentParameters[this.name] = null;
                 self.selectedParameters[this.name] = this.value;
             });
+            self.selectedParameters.offset = 0;
             self.fetch();
             event.preventDefault();
         },
