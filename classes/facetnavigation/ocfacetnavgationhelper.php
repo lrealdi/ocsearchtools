@@ -203,13 +203,13 @@ class OCFacetNavgationHelper
         return $params;
     }
     
-    protected static function addToQueryUri( &$queryUri, $key, $value, $baseUrl )
+    protected static function addToQueryUri( $queryUri, $key, $value, $baseUrl )
     {
         $queryUri[$key] = $value;
         return self::getUriString( $queryUri, $baseUrl );
     }
     
-    protected static function removeFromQueryUri( &$queryUri, $key, $value, $baseUrl )
+    protected static function removeFromQueryUri( $queryUri, $key, $value, $baseUrl )
     {
         if ( isset( $queryUri[$key] ) && $queryUri[$key] == $value )
         {
@@ -218,7 +218,7 @@ class OCFacetNavgationHelper
         return self::getUriString( $queryUri, $baseUrl );
     }
     
-    protected static function getUriString( $queryUri, &$baseUrl )
+    protected static function getUriString( $queryUri, $baseUrl )
     {                
         foreach( $queryUri as $key => $value )
         {            
@@ -245,7 +245,7 @@ class OCFacetNavgationHelper
                 }
             }
         }
-        
+
         foreach( $facets as $key => $names )
         {            
             $navigation[$names['name']] = array();
@@ -266,6 +266,7 @@ class OCFacetNavgationHelper
                 //$navigationValues['filter'] = $query;                
                 $nameEncoded = self::encodeKey( $names['name'] );
                 $termEncoded = self::encodeValue( $term );
+
                 if ( isset( $queryUrl[$nameEncoded] ) && $queryUrl[$nameEncoded] == $termEncoded )
                 {
                     $navigationValues['active'] = true;
@@ -316,6 +317,7 @@ class OCFacetNavgationHelper
         $navigation = array();
         
         $absoluteParams['SearchLimit'] = 1;
+        $absoluteParams['SearchOffset'] = 0;
         $absoluteParams['AsObjects'] = false;                
         $search = self::fetch( $absoluteParams );
         
@@ -323,6 +325,7 @@ class OCFacetNavgationHelper
         if ( !empty( $relativeParams ) )
         {
             $relativeParams['SearchLimit'] = 1;
+            $relativeParams['SearchOffset'] = 0;
             $relativeParams['AsObjects'] = false;
             $searchForCount = self::fetch( $relativeParams, $query );
         }        
@@ -367,7 +370,6 @@ class OCFacetNavgationHelper
         
         $facetFields = $search['SearchExtras']->attribute( 'facet_fields' );
         $facetFieldsForCount = isset( $searchForCount['SearchExtras'] ) ? $searchForCount['SearchExtras']->attribute( 'facet_fields' ) : array();
-
         return array_merge( $navigation, self::mergeFacetsInNavigationList( $absoluteParams['Facet'], $facetFields, $facetFieldsForCount, $overrideCount, $extraParameters, $queryUrl, $baseUrl ) );
     }
     
@@ -387,18 +389,7 @@ class OCFacetNavgationHelper
     protected function fetchFacetNavigation()
     {        
         $params = $this->parseFetchParams( $this->originalFetchParameters );
-        $paramsForCount = $this->fetchParameters;
-        
-        $overrideCount = false;
-        foreach( $facets as $key => $names )
-        {
-            if ( isset( $facetFields2[$key]['countList'] ) && !empty( $facetFields2[$key]['countList'] ) )
-            {
-                $overrideCount = true;
-                break;
-            }
-        }
-        
+        $paramsForCount = $this->fetchParameters;        
         return self::navigationList( $params, $paramsForCount, $this->query, null, $this->extraParameters, $this->queryUri, $this->baseUri );
     }
     
