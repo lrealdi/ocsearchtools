@@ -1,7 +1,7 @@
 <h2>Risultati della ricerca</h2>
 <p class="navigation">
   {foreach $data.fields as $field}
-  <a class="btn btn-small btn-info" href={concat( $node.url_alias, $field.remove_view_parameters )|ezurl()}>
+  <a class="btn btn-small btn-info" href={concat( $page_url, $field.remove_view_parameters )|ezurl()}>
 	<i class="icon-remove icon-white"></i> <strong>{$field.name}:</strong> {$field.value}
   </a>
   {/foreach}
