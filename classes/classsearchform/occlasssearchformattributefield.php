@@ -21,7 +21,12 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
         );        
         $this->functionAttributes = array( 'values' => 'getValues' );
     }
-    
+
+    /**
+     * @param eZContentClassAttribute $attribute
+     *
+     * @return OCClassSearchFormAttributeField
+     */
     public static function instance( eZContentClassAttribute $attribute )
     {
         if ( !isset( self::$_instances[$attribute->attribute( 'id' )] ) )
@@ -85,7 +90,39 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
         }
         return $this->values;
     }
-    
+
+    public function buildFetch( OCClassSearchFormFetcher $fetcher, $requestKey, $requestValue, &$filters )
+    {
+        if ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
+        {
+            $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, 'name', 'search' );
+            $addQuote = true;
+        }
+        else
+        {
+            $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
+            $addQuote = false;
+        }
+        if ( is_array( $requestValue ) )
+        {
+            $values = array();
+            foreach( $requestValue as $v )
+            {
+                $values[] = $fieldName . ':' . $fetcher->encode( $v, $addQuote );
+            }
+            $filters[] = array( 'or', $values );
+        }
+        else
+        {
+            $filters[] = $fieldName . ':' . $fetcher->encode( $requestValue, $addQuote );
+        }
+
+        $fetcher->addFetchField( array(
+            'name' => $this->contentClassAttribute->attribute( 'name' ),
+            'value' => $requestValue,
+            'remove_view_parameters' => $fetcher->getViewParametersString( array( $requestKey ) )
+        ));
+    }
 }
 
 ?>

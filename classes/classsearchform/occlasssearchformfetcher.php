@@ -1,6 +1,6 @@
 <?php
 
-class OCClassSearchFormResult
+class OCClassSearchFormFetcher
 {
     
     protected static $_result;
@@ -8,7 +8,7 @@ class OCClassSearchFormResult
     protected $requestFields = array();
 
     protected $fetchFields = array();
-    
+
     protected $isFetch = false;
 
     protected $baseParameters = array();
@@ -75,7 +75,7 @@ class OCClassSearchFormResult
         return $string;
     }
     
-    protected function encode( $value, $addQuote )
+    public function encode( $value, $addQuote )
     {
         $value = addcslashes( $value, '"' );
         if ( $addQuote )
@@ -83,7 +83,7 @@ class OCClassSearchFormResult
         return $value;
     }
 
-    protected function addFetchField( $fieldArray )
+    public function addFetchField( $fieldArray )
     {
         foreach( $this->fetchFields as $field )
         {
@@ -106,35 +106,12 @@ class OCClassSearchFormResult
             {
                 $contentClassAttributeID = str_replace( OCClassSearchFormAttributeField::NAME_PREFIX, '', $key );
                 $contentClassAttribute = eZContentClassAttribute::fetch( $contentClassAttributeID );
-                if ( $contentClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
-                {                    
-                    $fieldName = ezfSolrDocumentFieldBase::getFieldName( $contentClassAttribute, 'name', 'search' );
-                    $addQuote = true;
-                }
-                else
-                {            
-                    $fieldName = ezfSolrDocumentFieldBase::getFieldName( $contentClassAttribute, null, 'search' );
-                    $addQuote = false;
-                }
-                if ( is_array( $value ) )
+                if ( $contentClassAttribute instanceof eZContentClassAttribute )
                 {
-                    $values = array();
-                    foreach( $value as $v )
-                    {
-                        $values[] = $fieldName . ':' . $this->encode( $v, $addQuote );
-                    }
-                    $filters[] = array( 'or', $values );                    
+                    $field = OCClassSearchFormAttributeField::instance( $contentClassAttribute );
+                    $this->isFetch = true;
+                    $field->buildFetch( $this, $key, $value, $filters );
                 }
-                else
-                {
-                    $filters[] = $fieldName . ':' . $this->encode( $value, $addQuote );
-                }                
-                $this->isFetch = true;
-                $this->addFetchField( array(
-                    'name' => $contentClassAttribute->attribute( 'name' ),
-                    'value' => $value,
-                    'remove_view_parameters' => $this->getViewParametersString( array( $key ) )
-                ) );
             }
             elseif ( in_array( $key, OCFacetNavgationHelper::$allowedUserParamters ) )
             {

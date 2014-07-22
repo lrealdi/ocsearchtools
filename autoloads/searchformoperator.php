@@ -220,7 +220,7 @@ class SearchFormOperator
             case 'setFilterParameter':
             {
                 self::$filters[$namedParameters['name']][] = $namedParameters['value'];
-                eZDebug::writeNotice($namedParameters, 'setFilterParameter');
+                $this->log( $namedParameters, 'setFilterParameter' );
                 $operatorValue = self::$filters[$namedParameters['name']];
             }break;
             
@@ -230,7 +230,7 @@ class SearchFormOperator
                 
                 if ( isset( self::$query_filters[$namedParameters['name']] ))
                 {
-                    eZDebug::writeNotice( $namedParameters['name'] .': ' . var_export( self::$query_filters[$namedParameters['name']], true ), 'getFilterParameter');
+                    $this->log( $namedParameters['name'] .': ' . var_export( self::$query_filters[$namedParameters['name']], true ), 'getFilterParameter' );
                     $operatorValue = is_array( self::$query_filters[$namedParameters['name']] ) ? self::$query_filters[$namedParameters['name']] : array( self::$query_filters[$namedParameters['name']] );                    
                     return true;
                 }
@@ -281,7 +281,7 @@ class SearchFormOperator
                         $filterSearchHash[] = $name . ':' . $value[0];
                     }
                 }
-                eZDebug::writeNotice( $filterSearchHash, 'getFilterParameters' );
+                $this->log( $filterSearchHash, 'getFilterParameters' );
                 $operatorValue = $filterSearchHash;
             } break;
 			
@@ -301,7 +301,7 @@ class SearchFormOperator
                                 if ( !in_array( $f, $tempArray ) )
                                 {
                                     $tempArray[] = $f;
-                                    $urlSuffix .= '&filter[]=' . $f;
+                                    $urlSuffix .= '&filter[]=' . rawurlencode( $f );
                                 }
                             }
                         }
@@ -311,7 +311,7 @@ class SearchFormOperator
                         if ( !in_array( $filter, $tempArray ) )
                         {                        
                             $tempArray[] = $filter;
-                            $urlSuffix .= '&filter[]=' . $filter;
+                            $urlSuffix .= '&filter[]=' . rawurlencode( $filter );
                         }
                     }
                 }
@@ -345,7 +345,6 @@ class SearchFormOperator
 
             case 'asort':
             {
-                eZDebug::writeNotice($operatorValue,__METHOD__);
                 asort( $operatorValue );                
             }break;
             
@@ -438,6 +437,11 @@ class SearchFormOperator
         }
         
         self::$query_filters = $filterList;
+    }
+
+    private function log( $message, $label )
+    {
+        eZDebug::writeNotice( $message, $label );
     }
     
 }
