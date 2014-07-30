@@ -15,7 +15,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
      * @var array
      */
     public static $subattributesDefinition = array( self::DEFAULT_SUBATTRIBUTE => 'text',
-      						    self::DEFAULT_SUBATTRIBUTE_TYPE => 'string');
+                                                    self::DEFAULT_SUBATTRIBUTE_TYPE => 'string');
 
     /**
      * The name of the default subattribute.
@@ -27,12 +27,15 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
     const DEFAULT_SUBATTRIBUTE = 'full_text_field';
 
     const DEFAULT_SUBATTRIBUTE_TYPE = 'string';
-    
+
 
     /**
      * @see ezfSolrDocumentFieldBase::getFieldName()
+     * @param eZContentClassAttribute $classAttribute
+     * @param null $subAttribute
+     * @param string $context
      *
-     * @todo Implement this
+     * @return bool|string
      */
     public static function getFieldName( eZContentClassAttribute $classAttribute, $subAttribute = null, $context = 'search' )
     {
@@ -40,15 +43,21 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
         {
             case 'ezobjectrelation' :
             {
-                // Optimistic name generation here : assume the $subAttribute value actually matches one of the related object's attributes name. Hence the commented out line in the first "if" below.
-                if ( $subAttribute and
-                     $subAttribute !== '' and
-                     $subAttribute != self::DEFAULT_SUBATTRIBUTE and
-                     ( $type = self::getTypeForSubattribute( $classAttribute, $subAttribute, $context ) ) )
+                if ( $subAttribute
+                     && $subAttribute !== ''
+                     && $subAttribute != self::DEFAULT_SUBATTRIBUTE
+                     && ( $type = self::getTypeForSubattribute( $classAttribute, $subAttribute, $context ) ) )
                 {
-                    return parent::generateSubattributeFieldName( $classAttribute,
-                                                                  $subAttribute,
-                                                                  $type );
+                    if ( in_array( $subAttribute, array_keys( eZSolr::metaAttributes() ) ) )
+                    {                        
+                        return parent::generateSubmetaFieldName( $subAttribute, $classAttribute );
+                    }
+                    else
+                    {
+                        return parent::generateSubattributeFieldName( $classAttribute,
+                                                                      $subAttribute,
+                                                                      $type );
+                    }
                 }
                 else
                 {
@@ -65,31 +74,39 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                      $subAttribute != self::DEFAULT_SUBATTRIBUTE and
                      ( $type = self::getTypeForSubattribute( $classAttribute, $subAttribute, $context ) ) )
                 {
-                    // A subattribute was passed
-                    return parent::generateSubattributeFieldName( $classAttribute,
-                                                                  $subAttribute,
-                                                                  $type );
-                
+                    if ( in_array( $subAttribute, array_keys( eZSolr::metaAttributes() ) ) )
+                    {                        
+                        return parent::generateSubmetaFieldName( $subAttribute, $classAttribute );
+                    }
+                    else
+                    {                        
+                        return parent::generateSubattributeFieldName( $classAttribute,
+                                                                      $subAttribute,
+                                                                      $type );
+                    }
                 }
                 else
                 {
                     // return the default field name here.
                     return parent::generateAttributeFieldName( $classAttribute,
-                                                              self::$subattributesDefinition[self::DEFAULT_SUBATTRIBUTE_TYPE] );
+                                                               self::$subattributesDefinition[self::DEFAULT_SUBATTRIBUTE_TYPE] );
                 }
             } break;
 
             default:
             break;
         }
+        return false;
     }
 
     /**
      * Identifies, based on the existing object relations, the type of the subattribute.
      *
-     * @param eZContentClassAttribute $classAttribute The ezobjectrelation/ezobjectrelationlist attribute
-     * @param $subAttribute The subattribute's name
-     * @return string The type of the subattribute, false otherwise.
+     * @param eZContentClassAttribute $classAttribute
+     * @param $subAttribute
+     * @param $context
+     *
+     * @return bool|string
      */
     protected static function getTypeForSubattribute( eZContentClassAttribute $classAttribute, $subAttribute, $context  )
     {
@@ -196,6 +213,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
         
             foreach( $baseList as $field )
             {
+                /** @var eZContentClassAttribute $tmpClassAttribute */
                 $tmpClassAttribute = $field->ContentObjectAttribute->attribute( 'contentclass_attribute' );
                 $fieldName = $field->ContentObjectAttribute->attribute( 'contentclass_attribute_identifier' );
         
@@ -208,8 +226,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                                                                                ezfSolrDocumentFieldBase::getClassAttributeType( $tmpClassAttribute, null, $context ) );
                 }
                 $fieldNameArray = array_unique( $fieldNameArray );
-        
-                $finalValue = '';
+
                 if ( $tmpClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelation' or
                      $tmpClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
                 {
@@ -249,12 +266,11 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                 }
                 $metaData[ezfSolrDocumentFieldBase::generateSubmetaFieldName( $metaInfo['name'], $contentClassAttribute )] = $value;
             }
-
-            return $metaData;
         }
+
+        return $metaData;
     }
 
-   
     /**
      * @see ezfSolrDocumentFieldBase::getData()
      */
@@ -321,13 +337,12 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                 $contentClassAttribute = $this->ContentObjectAttribute->attribute( 'contentclass_attribute' );
 	   
                 $content = $this->ContentObjectAttribute->content();
-                $attributeIdentifier = $this->ContentObjectAttribute->attribute( 'contentclass_attribute_identifier' );
-                
+
                 $returnArrayRelatedObject = array();
                 
-                foreach( $content['relation_list'] as $i => $relationItem )
+                foreach( $content['relation_list'] as $relationItem )
                 {
-                    $relatedObject = eZContentObject::fetch($relationItem['contentobject_id']);              	
+                    $relatedObject = eZContentObject::fetch( $relationItem['contentobject_id'] );
             
                     if ( $relatedObject )
                     {
@@ -350,18 +365,15 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                 return $result;
 
             } break;
-            
-            default:
-            break;
         }
+        return array();
     }
 
     /**
      * Get ezfSolrDocumentFieldBase instances for all attributes of specified eZContentObjectVersion
      *
-     * @param eZContentObjectVersion Instance of eZContentObjectVersion to fetch attributes from.
-     *
-     * @return array List of ezfSolrDocumentFieldBase instances.
+     * @param eZContentObjectVersion $objectVersion Instance of eZContentObjectVersion to fetch attributes from.
+     * @return ezfSolrDocumentFieldBase[]|ocSolrDocumentFieldObjectRelation[] List of ezfSolrDocumentFieldBase instances.
      */
     function getBaseList( eZContentObjectVersion $objectVersion )
     {
@@ -373,7 +385,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
         {
             foreach( $objectVersion->contentObjectAttributes( $this->ContentObjectAttribute->attribute( 'language_code' ) ) as $attribute )
             {
-                
+                /** @var eZContentObjectAttribute $attribute */
                 if ( $attribute->attribute( 'contentclass_attribute' )->attribute( 'is_searchable' ) )
                 {
                     $returnList[] = ezfSolrDocumentFieldBase::getInstance( $attribute );
@@ -383,5 +395,3 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
         return $returnList;
     }
 }
-
-?>

@@ -40,7 +40,8 @@ class ezjsSearchToolsFunctionsJS extends ezjscServerFunctions
             $tmpFacet = explode( ';' , $tmpFacet );
             $facets[] = array( 'field' => $tmpFacet[0],
                                'name' => $tmpFacet[1],
-                               'limit' => $tmpFacet[2]
+                               'limit' => $tmpFacet[2],
+                               'sort' => isset( $tmpFacet[3] ) ? $tmpFacet[3] : 'count'
                              );
         }
         
