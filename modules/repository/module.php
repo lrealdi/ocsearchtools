@@ -10,6 +10,13 @@ $ViewList['client'] = array(
     'unordered_params' => array()
 );
 
+$ViewList['import'] = array(
+    'functions' => array( 'client' ),
+    'script' => 'import.php',
+    'params' => array( 'RepositoryID', 'NodeID', 'ParentNodeID' ),
+    'unordered_params' => array()
+);
+
 $ViewList['server'] = array(
     'functions' => array( 'server' ),
     'script' => 'server.php',
