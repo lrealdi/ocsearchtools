@@ -6,6 +6,7 @@ ModuleList[]=index
 ModuleList[]=calendar
 ModuleList[]=facet
 ModuleList[]=ocsearch
+ModuleList[]=repository
 
 
 */?>

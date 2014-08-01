@@ -7,5 +7,6 @@ ExtensionAutoloadPath[]=ocsearchtools
 PolicyOmitList[]=facet/proxy
 PolicyOmitList[]=calendar/view
 PolicyOmitList[]=ocsearch/action
+PolicyOmitList[]=repository/server
 
 */?>
