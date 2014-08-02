@@ -5,7 +5,13 @@ class OCCrossSearch
     const SERVER_BASE_PATH = '/repository/server/';
 
     const CLIENT_BASE_PATH = '/repository/client/';
-    
+
+    /**
+     * @param int $repositoryID
+     *
+     * @return OCRepositoryServerInterface
+     * @throws Exception
+     */
     public static function serverHandler( $repositoryID )
     {
         $ini = eZINI::instance( 'ocrepository.ini' );
@@ -24,7 +30,10 @@ class OCCrossSearch
         }
         throw new Exception( "Server $repositoryID non trovato" );
     }
-    
+
+    /**
+     * @return array
+     */
     public static function listAvailableRepositories()
     {
         $ini = eZINI::instance( 'ocrepository.ini' );
@@ -40,7 +49,12 @@ class OCCrossSearch
         }
         return $repositories;
     }
-    
+
+    /**
+     * @param int $repositoryID
+     *
+     * @return array|bool
+     */
     public static function isAvailableRepository( $repositoryID )
     {
         $ini = eZINI::instance( 'ocrepository.ini' );
@@ -52,7 +66,13 @@ class OCCrossSearch
         }
         return false;
     }
-    
+
+    /**
+     * @param int $repositoryID
+     *
+     * @return OCRepositoryClientInterface
+     * @throws Exception
+     */
     public static function instanceRepository( $repositoryID )
     {
         $definition = self::isAvailableRepository( $repositoryID );        
