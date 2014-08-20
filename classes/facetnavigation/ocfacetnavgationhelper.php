@@ -100,12 +100,12 @@ class OCFacetNavgationHelper
         $result = $this->fetchResults();
         $this->data['contents'] = $result['contents'];
         $this->data['count'] = $result['count'];
-        $this->data['uri'] = $this->getUriString( $this->queryUri );        
+        $this->data['uri'] = self::getUriString( $this->queryUri, $this->baseUri );        
         $this->data['base_uri'] = $this->baseUri;
         $this->data['json_params'] = json_encode( $this->originalFetchParameters );
         $this->data['token'] = md5( self::TOKEN . json_encode( $this->originalFetchParameters ) );
         $this->data['query'] = $this->query;
-        $this->data['fetch_parameters'] = $this->fetchParameters;
+        $this->data['fetch_parameters'] = $this->fetchParameters + array( '_query' => $this->query );
     }
     
     public static function data( array $fetchParams, array $userParameters, $baseUri, $query = '' )
@@ -230,15 +230,14 @@ class OCFacetNavgationHelper
         return $baseUrl;
     }
     
-    protected static function mergeFacetsInNavigationList( $facets, $facetFields1, $facetFields2, $overrideCount = null, $extraParameters = array(), &$queryUrl = '', &$baseUrl = '' )
+    protected static function mergeFacetsInNavigationList( $facets, $facetFields, $facetFieldsForCount, $overrideCount = null, $extraParameters = array(), &$queryUrl = '', &$baseUrl = '' )
     {
-        $navigation = array();
-        
+        $navigation = array();        
         if ( $overrideCount === null )
         {
             foreach( $facets as $key => $names )
             {
-                if ( isset( $facetFields2[$key]['countList'] ) && !empty( $facetFields2[$key]['countList'] ) )
+                if ( isset( $facetFieldsForCount[$key]['count'] ) )
                 {
                     $overrideCount = true;
                     break;
@@ -249,7 +248,7 @@ class OCFacetNavgationHelper
         foreach( $facets as $key => $names )
         {            
             $navigation[$names['name']] = array();
-            foreach( $facetFields1[$key]['queryLimit'] as $term => $query )
+            foreach( $facetFields[$key]['queryLimit'] as $term => $query )
             {
                 if ( empty( $term ) ) continue;
                 
@@ -281,7 +280,7 @@ class OCFacetNavgationHelper
                 $navigation[$names['name']][$term] = $navigationValues;
             }
             
-            foreach( $facetFields1[$key]['nameList'] as $term => $name )
+            foreach( $facetFields[$key]['nameList'] as $term => $name )
             {                
                 if ( empty( $term ) ) continue;
                 $navigation[$names['name']][$term]['query'] = trim( $name, '"' );
@@ -289,12 +288,12 @@ class OCFacetNavgationHelper
 
             if ( $overrideCount )
             {
-                foreach( $facetFields1[$key]['countList'] as $term => $count )
+                foreach( $facetFields[$key]['countList'] as $term => $count )
                 {                
                     if ( empty( $term ) ) continue;
                     $navigation[$names['name']][$term]['count'] = 0;
                 }
-                foreach( $facetFields2[$key]['countList'] as $term => $count )
+                foreach( $facetFieldsForCount[$key]['countList'] as $term => $count )
                 {                
                     if ( empty( $term ) ) continue;
                     $navigation[$names['name']][$term]['count'] = $count;                                        
@@ -302,7 +301,7 @@ class OCFacetNavgationHelper
             }
             else
             {
-                foreach( $facetFields1[$key]['countList'] as $term => $count )
+                foreach( $facetFields[$key]['countList'] as $term => $count )
                 {                
                     if ( empty( $term ) ) continue;
                     $navigation[$names['name']][$term]['count'] = $count;
