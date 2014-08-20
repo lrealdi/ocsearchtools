@@ -196,6 +196,7 @@
             //var delay = function() { self.fetch(); };
             //timeout = setTimeout(delay, 600);            
             if(event.keyCode == 13) {
+                self.selectedParameters.offset = 0;
                 self.fetch();                
             }            
             event.preventDefault();
