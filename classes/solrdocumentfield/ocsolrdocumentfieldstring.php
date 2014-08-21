@@ -65,11 +65,26 @@ class ocSolrDocumentFieldString extends ezfSolrDocumentFieldBase
         $fieldNameArray = array_unique( $fieldNameArray );
         foreach ( $fieldNameArray as $fieldName )
         {
-            $fields[$fieldName] = $this->preProcessValue( strtolower( substr( $metaData, 0, 1 ) ),
+            $fields[$fieldName] = $this->preProcessValue( $this->getFirstAlpha( $metaData ),
                                                           self::getClassAttributeType( $contentClassAttribute ) );
         }
         
         return $fields;
+    }
+    
+    protected function getFirstAlpha( $string )
+    {
+        $first = '';
+        $letters = str_split( $string );
+        foreach( $letters as $letter )
+        {
+            if ( ctype_alpha( $letter ) )
+            {
+                $first = $letter;
+                break;
+            }
+        }
+        return $first;
     }
 }
 

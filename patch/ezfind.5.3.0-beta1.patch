@@ -1,0 +1,15 @@
+--- ezsolr.php	2014-08-21 09:25:21.000000000 +0200
++++ ezsolr.patch.php	2014-08-21 09:24:34.000000000 +0200
+@@ -1573,7 +1573,11 @@
+                             elseif ( $prefix === 'as' )
+                             {
+                                 $emit['data_map'][$inner] = ezfSolrStorage::unserializeData( $fieldValue );
+-                            }                            
++                            }
++                            elseif( in_array( $fieldName, $fieldsToReturn ) )
++                            {
++                                $emit['fields'][$fieldName] = $fieldValue;
++                            }
+                         }
+                         // it may be a field originating from the explicit fieldlist to return, so it should be added for template consumption
+                         // note that the fieldname will be kept verbatim in a substructure 'fields'
