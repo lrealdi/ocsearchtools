@@ -47,7 +47,13 @@ class OCClassSearchFormFetcher
         }
         else
         {
-            $this->requestFields = $requestFields;
+            foreach( $requestFields as $key => $value )
+            {
+                if ( !empty( $value ) )
+                {
+                    $this->requestFields[$key] = $value;
+                }
+            }            
         }
     }
     

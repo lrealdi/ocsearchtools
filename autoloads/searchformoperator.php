@@ -18,7 +18,8 @@ class SearchFormOperator
         'class_search_form',
         'attribute_search_form',
         'class_search_result',
-        'calendar'
+        'calendar',
+        'repository_list'
     );
     public static $filters = array();
     public static $query_filters = array();
@@ -162,6 +163,11 @@ class SearchFormOperator
 		
         switch ( $operatorName )
         {
+            
+            case 'repository_list':
+            {
+                $operatorValue = OCCrossSearch::listAvailableRepositories();    
+            } break;
             
             case 'class_search_result':
             {                
