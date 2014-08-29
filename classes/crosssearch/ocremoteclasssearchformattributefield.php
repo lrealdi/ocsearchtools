@@ -3,15 +3,32 @@
 class OCRemoteClassSearchFormAttributeField extends OCClassSearchFormField
 {
     const NAME_PREFIX = 'attribute';
-    
+
+    /**
+     * @var OCRemoteClassSearchFormAttributeField[]
+     */
     protected static $_instances = array();
-    
+
+    /**
+     * @var array
+     */
     protected $values;
 
+    /**
+     * @var OCRepositoryContentClassClient
+     */
     protected $client;
-    
+
+    /**
+     * @var eZContentClassAttribute
+     */
     public $contentClassAttribute;
-    
+
+    /**
+     * @param eZContentClassAttribute $attribute
+     * @param stdClass $remoteDefinition
+     * @param OCRepositoryContentClassClient $client
+     */
     protected function __construct( eZContentClassAttribute $attribute, stdClass $remoteDefinition, OCRepositoryContentClassClient $client )
     {        
         $this->contentClassAttribute = $attribute;
@@ -25,6 +42,13 @@ class OCRemoteClassSearchFormAttributeField extends OCClassSearchFormField
         $this->client = $client;
     }
 
+    /**
+     * @param eZContentClassAttribute $attribute
+     * @param stdClass $remoteDefinition
+     * @param OCRepositoryContentClassClient $client
+     *
+     * @return mixed
+     */
     public static function instance( eZContentClassAttribute $attribute, stdClass $remoteDefinition, OCRepositoryContentClassClient $client )
     {
         if ( !isset( self::$_instances[$attribute->attribute( 'id' )] ) )
@@ -33,7 +57,10 @@ class OCRemoteClassSearchFormAttributeField extends OCClassSearchFormField
         }
         return self::$_instances[$attribute->attribute( 'id' )];
     }
-    
+
+    /**
+     * @return array
+     */
     protected function getValues()
     {        
         if ( $this->values === null )

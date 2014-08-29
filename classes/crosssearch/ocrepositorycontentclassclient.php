@@ -4,17 +4,53 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
 {    
     const ACTION_SYNC_OBJECT = 'repository_content_class_sync';
     
-    const SERVER_CLASSDEFINITION_PATH = '/openpa/classdefinition/';    
-    
+    const SERVER_CLASSDEFINITION_PATH = '/openpa/classdefinition/';
+
+    /**
+     * @var array
+     */
     protected $parameters;
+
+    /**
+     * @var string
+     */
     protected $classIdentifier;
+
+    /**
+     * @var eZContentClass
+     */
     protected $contentClass;
+
+    /**
+     * @var OCRemoteClassSearchFormAttributeField[]
+     */
     protected $attributeFields;
+
+    /**
+     * @var stdClass
+     */
     protected $remoteContentClassDefinition;
+
+    /**
+     * @var array
+     */
     protected $results;
+
+    /**
+     * @var string
+     */
     protected $currentAction;
+
+    /**
+     * @var array
+     */
     protected $currentActionParameters;
-    
+
+    /**
+     * @param $parameters
+     *
+     * @throws Exception
+     */
     public function init( $parameters )
     {
         $this->attributes = $parameters;        
@@ -32,17 +68,27 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         
         $this->remoteContentClassDefinition = $this->getRemoteClassDefinition();
     }
-    
+
+    /**
+     * @param string $action
+     */
     public function setCurrentAction( $action )
     {
         $this->currentAction = $action;
     }
-    
+
+    /**
+     * @param array $parameters
+     */
     public function setCurrentActionParameters( $parameters )
     {
         $this->currentActionParameters = $parameters;
     }
-    
+
+    /**
+     * @return stdClass
+     * @throws Exception
+     */
     protected function getRemoteClassDefinition()
     {        
         $serverClassDefinitionUrl = rtrim( $this->attributes['definition']['Url'], '/' ) .  self::SERVER_CLASSDEFINITION_PATH . $this->classIdentifier;
@@ -63,7 +109,10 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         }
         throw new Exception( "Server e client coincidono" );
     }
-    
+
+    /**
+     * @return string
+     */
     protected function getForm()
     {        
         $keyArray = array( array( 'class', $this->contentClass->attribute( 'id' ) ),
@@ -130,7 +179,15 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         
         return $tpl->fetch( 'design:repository/contentclass_client/remote_class_search_form.tpl' );   
     }
-    
+
+    /**
+     * @param string $action
+     * @param array $parameters
+     * @param bool $responseAsArray
+     *
+     * @return mixed
+     * @throws Exception
+     */
     protected function call( $action, $parameters, $responseAsArray )
     {
         $serverBaseUrl = $this->attributes['definition']['ServerBaseUrl'];        
@@ -142,7 +199,13 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         eZDebug::writeNotice( $query, __METHOD__ . ' ' .  $action );
         return json_decode( eZHTTPTool::getDataByURL( $serverBaseUrl . '?' . $query ), $responseAsArray );
     }
-    
+
+    /**
+     * @param string $action
+     * @param array $parameters
+     *
+     * @return string
+     */
     protected function buildQueryString( $action, $parameters )
     {
         $parameters = array(
@@ -151,13 +214,23 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         );
         return http_build_query( $parameters );        
     }
-    
+
+    /**
+     * @param array $fetchParameters
+     *
+     * @return mixed
+     */
     public function fetchRemoteNavigationList( $fetchParameters )
     {        
         $result = $this->call( 'navigationList', $fetchParameters, true );
         return $result['response'];
     }
-    
+
+    /**
+     * @param array $result
+     *
+     * @return array
+     */
     protected function formatResult( $result )
     {
         $response = $result['response'];
@@ -188,7 +261,10 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         $results['next'] = $nextUrl;
         return $results;
     }
-    
+
+    /**
+     * @return array
+     */
     protected function getResults()
     {
         if ( $this->results === null )
@@ -202,12 +278,18 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         }
         return $this->results;
     }
-    
+
+    /**
+     * @return string
+     */
     public function templateName()
     {
         return 'design:repository/contentclass_client/client.tpl';
     }
-    
+
+    /**
+     * @throws Exception
+     */
     protected function checkClass()
     {
         if ( class_exists( 'OpenPAClassTools' ) )
@@ -238,7 +320,14 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
             throw new Exception( "La classe di contenuto non esiste in questa installazione" );
         }
     }
-    
+
+    /**
+     * @param int $remoteNodeID
+     * @param int $localParentNodeID
+     *
+     * @return eZContentObject
+     * @throws Exception
+     */
     public function importRemoteObjectFromRemoteNodeID( $remoteNodeID, $localParentNodeID )
     {
         if ( !class_exists( 'OpenPAApiNode' ) )
@@ -252,7 +341,7 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
             throw new Exception( "Url remoto \"{$apiNodeUrl}\" non raggiungibile" );
         }
         $newObject = $remoteApiNode->createContentObject( $localParentNodeID );
-        if ( !$newObject )
+        if ( !$newObject instanceof eZContentObject )
         {            
             throw new Exception( "Fallita la creazione dell'oggetto da nodo remoto" );
         }
