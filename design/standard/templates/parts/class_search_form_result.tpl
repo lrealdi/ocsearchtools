@@ -1,11 +1,11 @@
 <h2>Risultati della ricerca</h2>
 <p class="navigation">
   {foreach $data.fields as $field}
-  <a class="btn btn-small btn-info" href={concat( $page_url, $field.remove_view_parameters )|ezurl()}>
-	<i class="icon-remove icon-white"></i> <strong>{$field.name}:</strong> {$field.value}
+  <a class="btn btn-xs btn-info" href={concat( $page_url, $field.remove_view_parameters )|ezurl()}>
+	<i class="fa fa-close"></i> <strong>{$field.name}:</strong> {$field.value}
   </a>
   {/foreach}
-  <a class="btn btn-small btn-danger" href={$page_url|ezurl()}>Annulla ricerca</a>
+  <a class="btn btn-xs btn-danger" href={$page_url|ezurl()}>Annulla ricerca</a>
 </p>
 
 {if $data.count}	  

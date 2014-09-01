@@ -6,7 +6,7 @@
                                  $emit['data_map'][$inner] = ezfSolrStorage::unserializeData( $fieldValue );
 -                            }                            
 +                            }
-+                            elseif( in_array( $fieldName, $fieldsToReturn ) )
++                            if( in_array( $fieldName, $fieldsToReturn ) )
 +                            {
 +                                $emit['fields'][$fieldName] = $fieldValue;
 +                            }

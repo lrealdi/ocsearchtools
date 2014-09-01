@@ -43,14 +43,24 @@ if ( $http->getVariable( 'sSearch' ) != "" )
 $filters = array();
 if ( !empty( $defaultFilters ) )
 {        
-    $filters[] = $defaultFilters;
+    if ( $DefaultFilters  > 1 )
+    {
+        $filters[] = $defaultFilters;
+    }
+    else
+    {
+        $filters[] = $defaultFilters[0];
+    }    
 }
 for ( $i=0 ; $i<count( $fields ) ; $i++ )
 {
-    $columnFilters = array();    
-    if ( $fields[$i] == 'name' || $fields[$i] == 'meta_name_t' && $http->getVariable( 'sSearch_' . $i ) != '' )
+    $columnFilters = array();
+    $columnSearch = $http->getVariable( 'sSearch_' . $i );
+    if ( ( $fields[$i] == 'name' || $fields[$i] == 'meta_name_t' ) && !empty( $columnSearch ) )
     {
         $query = str_replace( ' ', ' AND ', $http->getVariable( 'sSearch_' . $i ) ) . '*';
+        //$searchText = str_replace( ' ', ' AND ', trim( $http->getVariable( 'sSearch_' . $i ) ) );
+        //$query = $searchText . '* OR ' . $searchText;    
     }
     elseif ( $http->hasGetVariable( 'bSearchable_' . $i ) && $http->getVariable( 'bSearchable_' . $i ) == "true" && $http->getVariable( 'sSearch_' . $i ) != '' )
     {
@@ -68,7 +78,8 @@ for ( $i=0 ; $i<count( $fields ) ; $i++ )
         }
         elseif ( isTextField( $fields[$i] ) )
         {
-            $columnFilters[] = $fields[$i] . ':' . str_replace( ' ', ' AND ', $http->getVariable( 'sSearch_' . $i ) );
+            $searchText = str_replace( ' ', ' AND ', trim( $http->getVariable( 'sSearch_' . $i ) ) );
+            $columnFilters[] = array( 'or', $fields[$i] . ':' . $searchText . '*', $fields[$i] . ':' . $searchText  );    
         }        
     }    
     if ( !empty( $columnFilters ) )
@@ -76,7 +87,7 @@ for ( $i=0 ; $i<count( $fields ) ; $i++ )
         if ( count( $columnFilters ) > 1 )
             $filters[] = array_merge( array( 'or' ), $columnFilters );
         else
-            $filters[] = $columnFilters;
+            $filters[] = $columnFilters[0];
     }
 }
 if ( empty( $filters ) )
@@ -100,7 +111,6 @@ $search = $solrSearch->search( $query, $params );
 $search['SearchParameters'] = $params;
 $iFilteredTotal = count( $search['SearchResult'] );
 $iTotal = $search['SearchCount'];
-echo '<pre>';print_r($search['SearchExtras']);die();
 $output = array(
     "sEcho" => intval( $http->getVariable( 'sEcho' ) ),
     "iTotalRecords" => $iTotal,

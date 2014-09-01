@@ -267,10 +267,7 @@ class OCCalendarData
             'ForceElevation' => true,
             'SearchDate' => null,
             'DistributedSearch' => null,
-            'FieldsToReturn' => array(
-                'attr_from_time_dt',
-                'attr_to_time_dt',                
-            ),
+            'FieldsToReturn' => self::fieldsToReturn(),
             'SearchResultClustering' => null,
             'ExtendedAttributeFilter' => array()
         );        
@@ -345,6 +342,14 @@ class OCCalendarData
             $sorted[$name] = $this->makeFacetTree( $name, $values );
         }        
         return $sorted;
+    }
+    
+    protected static function fieldsToReturn()
+    {
+        return array(
+            'attr_from_time_dt',
+            'attr_to_time_dt',                
+        );
     }
     
     protected function makeFacetTree( $name, $values )

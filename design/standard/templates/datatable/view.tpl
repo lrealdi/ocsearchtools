@@ -100,18 +100,18 @@ $(document).ready(function() {
             {/if}{/foreach}{literal}
         ]
     });
-    //dt.columnFilter({
-    //    "sRangeFormat": "Da {from} a {to}",
-    //    "aoColumns":[
-    //        {/literal}{foreach $fields as $field}{if $field|eq('meta_class_name_ms')}{literal}
-    //        {"type": "select", "values": [{/literal}{foreach $class_names as $class}"{$class}"{delimiter},{/delimiter}{/foreach}{literal}]},
-    //        {/literal}{*{elseif $field|eq('published')}{literal}
-    //        {"type": "date-range"},
-    //        {/literal}*}{else}{literal}
-    //        {"type": "text"},
-    //        {/literal}{/if}{/foreach}{literal}            
-    //    ]
-    //});
+    dt.columnFilter({
+        "sRangeFormat": "Da {from} a {to}",
+        "aoColumns":[
+            {/literal}{foreach $fields as $field}{if $field|eq('meta_class_name_ms')}{literal}
+            {"type": "select", "values": [{/literal}{foreach $class_names as $class}"{$class}"{delimiter},{/delimiter}{/foreach}{literal}]},
+            {/literal}{*{elseif $field|eq('published')}{literal}
+            {"type": "date-range"},
+            {/literal}*}{else}{literal}
+            {"type": "text"},
+            {/literal}{/if}{/foreach}{literal}            
+        ]
+    });
     //dt.buttonFilter({
     //    targetsWrapper: ".dataTableFiltersWrapper",
     //    targetContainer: ".dataTableFilter",

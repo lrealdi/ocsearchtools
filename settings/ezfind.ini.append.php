@@ -12,6 +12,7 @@ CustomMap[ezobjectrelationlist]=ocSolrDocumentFieldObjectRelation
 CustomMap[ezdate]=ocSolrDocumentFieldDate
 CustomMap[ezdatetime]=ocSolrDocumentFieldDate
 CustomMap[ezstring]=ocSolrDocumentFieldString
+CustomMap[ezgmaplocation]=ezfSolrDocumentFieldGmapLocation
 
 DatatypeMap[ezobjectrelationlist]=string
 

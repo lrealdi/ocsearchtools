@@ -8,6 +8,10 @@ if ( interface_exists( 'ezfIndexPlugin' ) )
         {
             $isEvent = $from = $to = false;
             $attributes = $contentObject->fetchAttributesByIdentifier( array( 'from_time', 'to_time' ) );
+            if ( empty( $attributes ) )
+            {
+                return false;
+            }
             foreach( $attributes as $attribute )
             {
                 if ( $attribute instanceof eZContentObjectAttribute )
