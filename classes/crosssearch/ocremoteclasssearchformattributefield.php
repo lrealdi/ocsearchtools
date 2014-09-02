@@ -68,7 +68,16 @@ class OCRemoteClassSearchFormAttributeField extends OCClassSearchFormField
             $this->values = array();
             if ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
             {                
-                $field = ezfSolrDocumentFieldBase::generateSubattributeFieldName( $this->contentClassAttribute, 'name', 'string' );
+                //$field = ezfSolrDocumentFieldBase::generateSubattributeFieldName( $this->contentClassAttribute, 'name', 'string' );
+                
+                //@todo errore nella definzione del nome del sottoattributo? verifaicare vedi anche in self::buildFetch
+                //$field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
+                //    ezfSolrDocumentFieldBase::SUBMETA_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name',
+                //    'string');
+                
+                $field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
+                    ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name' . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
+                    'string' );
             }
             else
             {            

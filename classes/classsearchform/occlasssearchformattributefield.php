@@ -46,7 +46,16 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
                 //@todo filter per parent_node
                 //$classContent = $this->contentClassAttribute->content();
                 //$filters = isset( $classContent['default_placement']['node_id'] ) ?  array( $classContent['default_placement']['node_id'] ) : array( 1 );
-                $field = ezfSolrDocumentFieldBase::generateSubattributeFieldName( $this->contentClassAttribute, 'name', 'string' );
+                
+                //@todo errore nella definzione del nome del sottoattributo? verifaicare vedi anche in self::buildFetch
+                //$field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
+                //    ezfSolrDocumentFieldBase::SUBMETA_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name',
+                //    'string');
+                
+                $field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
+                    ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name' . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
+                    'string' );
+                
             }
             else
             {            
@@ -95,7 +104,11 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
     {
         if ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
         {
-            $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, 'name', 'search' );
+            //@todo errore nella definzione del nome del sottoattributo? verifaicare vedi anceh in self::getValues
+            //$fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, 'name', 'search' );
+            $fieldName = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
+                    ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name' . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
+                    'string' );
             $addQuote = true;
         }
         else
