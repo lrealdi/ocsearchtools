@@ -9,5 +9,6 @@ PolicyOmitList[]=calendar/view
 PolicyOmitList[]=ocsearch/action
 PolicyOmitList[]=repository/server
 PolicyOmitList[]=datatable/view
+PolicyOmitList[]=classtools/definition
 
 */?>

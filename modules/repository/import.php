@@ -32,9 +32,14 @@ try
         
         $definition = $repository->attribute( 'definition' );
         
+        if ( !class_exists( 'OCOpenDataApiNode' ) )
+        {
+            throw new Exception( "Libreria OCOpenDataApiNode non trovata" );
+        }
+        
         $apiNodeUrl = rtrim( $definition['Url'], '/' ) . '/api/opendata/v1/content/node/' . $repositoryNodeID;
-        $remoteApiNode = OpenPAApiNode::fromLink( $apiNodeUrl );
-        if ( !$remoteApiNode instanceof OpenPAApiNode )
+        $remoteApiNode = OCOpenDataApiNode::fromLink( $apiNodeUrl );
+        if ( !$remoteApiNode instanceof OCOpenDataApiNode )
         {
             throw new Exception( "Url remoto \"{$apiNodeUrl}\" non raggiungibile" );
         }

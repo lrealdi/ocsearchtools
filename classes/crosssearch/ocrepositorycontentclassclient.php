@@ -4,7 +4,7 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
 {    
     const ACTION_SYNC_OBJECT = 'repository_content_class_sync';
     
-    const SERVER_CLASSDEFINITION_PATH = '/openpa/classdefinition/';
+    const SERVER_CLASSDEFINITION_PATH = '/classtools/definition/';
 
     /**
      * @var array
@@ -291,12 +291,13 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
      * @throws Exception
      */
     protected function checkClass()
-    {
-        if ( class_exists( 'OpenPAClassTools' ) )
+    {        
+        if ( class_exists( 'OCClassTools' ) )
         {
             try
             {
-                $tools = new OpenPAClassTools( $this->classIdentifier, true );
+                OCClassTools::setRemoteUrl( rtrim( $this->attributes['definition']['Url'], '/' ) . self::SERVER_CLASSDEFINITION_PATH );
+                $tools = new OCClassTools( $this->classIdentifier, true );                
                 $tools->compare();
                 $result = $tools->getData();            
                 if ( $result->hasError )
@@ -306,12 +307,12 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
             }
             catch( Exception $e )
             {
-                throw new Exception( '[Repository classi di contenuto di ComunWeb] ' . $e->getMessage() );
+                throw new Exception( '[Repository classi di contenuto ' . OCClassTools::getRemoteUrl() . '] ' . $e->getMessage() );
             }
         }
         else
         {
-            throw new Exception( "Libreria OpenPAClassTools non trovata" );
+            throw new Exception( "Libreria OCClassTools non trovata" );
         }
         
         $this->contentClass = eZContentClass::fetchByIdentifier( $this->classIdentifier );
@@ -330,13 +331,13 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
      */
     public function importRemoteObjectFromRemoteNodeID( $remoteNodeID, $localParentNodeID )
     {
-        if ( !class_exists( 'OpenPAApiNode' ) )
+        if ( !class_exists( 'OCOpenDataApiNode' ) )
         {
-            throw new Exception( "Libreria OpenPAApiNode non trovata" );
+            throw new Exception( "Libreria OCOpenDataApiNode non trovata" );
         }
         $apiNodeUrl = rtrim( $this->attributes['definition']['Url'], '/' ) . '/api/opendata/v1/content/node/' . $remoteNodeID;
-        $remoteApiNode = OpenPAApiNode::fromLink( $apiNodeUrl );
-        if ( !$remoteApiNode instanceof OpenPAApiNode )
+        $remoteApiNode = OCOpenDataApiNode::fromLink( $apiNodeUrl );
+        if ( !$remoteApiNode instanceof OCOpenDataApiNode )
         {
             throw new Exception( "Url remoto \"{$apiNodeUrl}\" non raggiungibile" );
         }
