@@ -23,4 +23,10 @@ interface OCRepositoryClientInterface
      * @param $parameters
      */
     function setCurrentActionParameters( $parameters );
+    
+    /**
+     * @param $parameters
+     * @return eZContentObject
+     */
+    function import( $remoteReference, $localLocation );
 }

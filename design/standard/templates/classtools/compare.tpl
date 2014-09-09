@@ -14,7 +14,7 @@ $(document).ready(function() {
 <div class="message-error">
   <p>{$data.error}</p>  
   {if $locale_not_found}
-    <form action={concat('classtools/class/', $request_id)ezurl()} method="post">
+    <form action={concat('classtools/compare/', $request_id)ezurl()} method="post">
         <input type="submit" name="InstallButton" value="Installa classe {$request_id}" class="defaultbutton" />                                
     </form>
   {/if}
@@ -40,7 +40,7 @@ $(document).ready(function() {
     {elseif and( count($errors)|eq(0), count($missing_in_remote)|gt(0) )}
         <div class="message-warning">           
             <h3>La classe contiene uno o più attributi aggiuntivi che non sono presenti nel prototipo</h3>
-            <form action={concat('classtools/class/', $locale.identifier)ezurl()} method="post">
+            <form action={concat('classtools/compare/', $locale.identifier)ezurl()} method="post">
                 <input type="submit" name="SyncButton" value="Sincronizza adesso" class="defaultbutton" />                                
 
                 <div class="message-error">
@@ -57,7 +57,7 @@ $(document).ready(function() {
     {else}
         <div class="message-error">
         <h3>La classe non è sincronizzata con il prototipo</h3>
-        <form action={concat('classtools/class/', $locale.identifier)ezurl()} method="post">
+        <form action={concat('classtools/compare/', $locale.identifier)ezurl()} method="post">
             <input type="submit" name="SyncButton" value="Sincronizza adesso" class="defaultbutton" />
             {if count($errors)|gt(0)}        
             <div class="message-error">

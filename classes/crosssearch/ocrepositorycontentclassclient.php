@@ -290,14 +290,18 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
     /**
      * @throws Exception
      */
-    protected function checkClass()
+    protected function checkClass( $createClassIfNotExists = false )
     {        
         if ( class_exists( 'OCClassTools' ) )
         {
             try
-            {
+            {                
                 OCClassTools::setRemoteUrl( rtrim( $this->attributes['definition']['Url'], '/' ) . self::SERVER_CLASSDEFINITION_PATH );
-                $tools = new OCClassTools( $this->classIdentifier, true );                
+                $tools = new OCClassTools( $this->classIdentifier, $createClassIfNotExists );                
+                if ( $createClassIfNotExists )
+                {
+                    $tools->sync();
+                }
                 $tools->compare();
                 $result = $tools->getData();            
                 if ( $result->hasError )
@@ -352,6 +356,29 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         );        
         $pendingItem = new eZPendingActions( $rowPending );
         $pendingItem->store();
+        return $newObject;
+    }
+    
+    function import( $remoteReference, $localLocation )
+    {
+        $definition = $this->attribute( 'definition' );
+        
+        if ( !class_exists( 'OCOpenDataApiNode' ) )
+        {
+            throw new Exception( "Libreria OCOpenDataApiNode non trovata" );
+        }
+        
+        $apiNodeUrl = rtrim( $definition['Url'], '/' ) . '/api/opendata/v1/content/node/' . $remoteReference;
+        $remoteApiNode = OCOpenDataApiNode::fromLink( $apiNodeUrl );
+        if ( !$remoteApiNode instanceof OCOpenDataApiNode )
+        {
+            throw new Exception( "Url remoto \"{$apiNodeUrl}\" non raggiungibile" );
+        }
+        $newObject = $remoteApiNode->createContentObject( $localLocation );
+        if ( !$newObject instanceof eZContentObject )
+        {
+            throw new Exception( "Error importing object" );
+        }
         return $newObject;
     }
 

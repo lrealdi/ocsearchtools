@@ -30,20 +30,7 @@ try
             return;
         }
         
-        $definition = $repository->attribute( 'definition' );
-        
-        if ( !class_exists( 'OCOpenDataApiNode' ) )
-        {
-            throw new Exception( "Libreria OCOpenDataApiNode non trovata" );
-        }
-        
-        $apiNodeUrl = rtrim( $definition['Url'], '/' ) . '/api/opendata/v1/content/node/' . $repositoryNodeID;
-        $remoteApiNode = OCOpenDataApiNode::fromLink( $apiNodeUrl );
-        if ( !$remoteApiNode instanceof OCOpenDataApiNode )
-        {
-            throw new Exception( "Url remoto \"{$apiNodeUrl}\" non raggiungibile" );
-        }
-        $newObject = $remoteApiNode->createContentObject( $localParentNodeID );
+        $newObject = $repository->import( $repositoryNodeID, $localParentNodeID );
         $module->redirectTo( $newObject->attribute( 'main_node' )->attribute( 'url_alias' ) );        
     }
     else
