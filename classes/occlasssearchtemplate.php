@@ -29,7 +29,10 @@ class OCClassSearchTemplate
     public function hasAttribute( $name )
     {
         return isset( $this->attributes[$name] ) || isset( $this->functionAttributes[$name] );
-    }    
-}
+    }
 
-?>
+    public function setAttributes( $attributes )
+    {
+        $this->attributes = $attributes;
+    }
+}

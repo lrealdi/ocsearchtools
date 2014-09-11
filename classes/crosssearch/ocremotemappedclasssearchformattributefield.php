@@ -1,6 +1,6 @@
 <?php
 
-class OCRemoteClassSearchFormAttributeField extends OCClassSearchFormField
+class OCRemoteMappedClassSearchFormAttributeField extends OCClassSearchFormField
 {
     const NAME_PREFIX = 'attribute';
 
@@ -15,21 +15,21 @@ class OCRemoteClassSearchFormAttributeField extends OCClassSearchFormField
     protected $values;
 
     /**
-     * @var OCRepositoryContentClassClient
+     * @var OCRepositoryMappedContentClassClient
      */
     protected $client;
 
     /**
-     * @var eZContentClassAttribute
+     * @var OCClassSearchTemplate
      */
     public $contentClassAttribute;
 
     /**
-     * @param eZContentClassAttribute $attribute
+     * @param OCClassSearchTemplate $attribute
      * @param stdClass $remoteDefinition
-     * @param OCRepositoryContentClassClient $client
+     * @param OCRepositoryMappedContentClassClient $client
      */
-    protected function __construct( eZContentClassAttribute $attribute, stdClass $remoteDefinition, OCRepositoryContentClassClient $client )
+    protected function __construct( OCClassSearchTemplate $attribute, stdClass $remoteDefinition, OCRepositoryMappedContentClassClient $client )
     {        
         $this->contentClassAttribute = $attribute;
         $this->attributes = array(
@@ -43,17 +43,17 @@ class OCRemoteClassSearchFormAttributeField extends OCClassSearchFormField
     }
 
     /**
-     * @param eZContentClassAttribute $attribute
+     * @param OCClassSearchTemplate $attribute
      * @param stdClass $remoteDefinition
-     * @param OCRepositoryContentClassClient $client
+     * @param OCRepositoryMappedContentClassClient $client
      *
      * @return OCRemoteClassSearchFormAttributeField
      */
-    public static function instance( eZContentClassAttribute $attribute, stdClass $remoteDefinition, OCRepositoryContentClassClient $client )
+    public static function instance( OCClassSearchTemplate $attribute, stdClass $remoteDefinition, OCRepositoryMappedContentClassClient $client )
     {
         if ( !isset( self::$_instances[$attribute->attribute( 'id' )] ) )
         {
-            self::$_instances[$attribute->attribute( 'id' )] = new OCRemoteClassSearchFormAttributeField( $attribute, $remoteDefinition, $client );
+            self::$_instances[$attribute->attribute( 'id' )] = new OCRemoteMappedClassSearchFormAttributeField( $attribute, $remoteDefinition, $client );
         }
         return self::$_instances[$attribute->attribute( 'id' )];
     }
@@ -67,21 +67,17 @@ class OCRemoteClassSearchFormAttributeField extends OCClassSearchFormField
         {
             $this->values = array();
             if ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
-            {
-                //$field = ezfSolrDocumentFieldBase::generateSubattributeFieldName( $this->contentClassAttribute, 'name', 'string' );
-
-                //@todo errore nella definzione del nome del sottoattributo? verifaicare vedi anche in self::buildFetch
-                //$field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
-                //    ezfSolrDocumentFieldBase::SUBMETA_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name',
-                //    'string');
-
+            {                
                 $field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
                     ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name' . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
                     'string' );
             }
             else
-            {            
-                $field = ezfSolrDocumentFieldBase::generateAttributeFieldName( $this->contentClassAttribute, 'string' );
+            {
+                $field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
+                    ezfSolrDocumentFieldBase::ATTR_FIELD_PREFIX .
+                    $this->contentClassAttribute->attribute( 'identifier' ),
+                    'string' );
             }
             
             $facets = array( 'field' => $field, 'name'=> $this->attributes['name'], 'limit' => 300, 'sort' => 'alpha' );

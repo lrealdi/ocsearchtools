@@ -48,7 +48,7 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
 
     /**
      * @param $parameters
-     *
+     * @return void
      * @throws Exception
      */
     public function init( $parameters )
@@ -115,7 +115,7 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
      */
     protected function getForm()
     {        
-        $keyArray = array( array( 'class', $this->contentClass->attribute( 'id' ) ),
+        $classKeyArray = array( array( 'class', $this->contentClass->attribute( 'id' ) ),
                            array( 'class_identifier', $this->contentClass->attribute( 'identifier' ) ),                           
                            array( 'class_group', $this->contentClass->attribute( 'match_ingroup_id_list' ) ) );
         
@@ -146,12 +146,14 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
                                                                                    $this->remoteContentClassDefinition->DataMap[0]->{$attribute->attribute( 'identifier' )},
                                                                                    $this);
                     
-                    $keyArray = array( array( 'class', $this->contentClass->attribute( 'id' ) ),
-                    array( 'class_identifier', $this->contentClass->attribute( 'identifier' ) ),                           
-                    array( 'class_group', $this->contentClass->attribute( 'match_ingroup_id_list' ) ),
-                    array( 'attribute', $inputField->contentClassAttribute->attribute( 'id' ) ),                           
-                    array( 'attribute_identifier', $inputField->contentClassAttribute->attribute( 'identifier' ) ) );
-                    
+                    $keyArray = array(
+                        array( 'class', $this->contentClass->attribute( 'id' ) ),
+                        array( 'class_identifier', $this->contentClass->attribute( 'identifier' ) ),
+                        array( 'class_group', $this->contentClass->attribute( 'match_ingroup_id_list' ) ),
+                        array( 'attribute', $inputField->contentClassAttribute->attribute( 'id' ) ),
+                        array( 'attribute_identifier', $inputField->contentClassAttribute->attribute( 'identifier' ) )
+                    );
+
                     $tpl = eZTemplate::factory();
                     $tpl->setVariable( 'class', $this->contentClass );
                     $tpl->setVariable( 'attribute', $inputField->contentClassAttribute );
@@ -175,7 +177,7 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         $tpl->setVariable( 'form_action', $formAction );
 
         $res = eZTemplateDesignResource::instance();
-        $res->setKeys( $keyArray );        
+        $res->setKeys( $classKeyArray );
         
         return $tpl->fetch( 'design:repository/contentclass_client/remote_class_search_form.tpl' );   
     }
@@ -333,7 +335,7 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
      * @return eZContentObject
      * @throws Exception
      */
-    public function importRemoteObjectFromRemoteNodeID( $remoteNodeID, $localParentNodeID )
+    public function import( $remoteNodeID, $localParentNodeID )
     {
         if ( !class_exists( 'OCOpenDataApiNode' ) )
         {
@@ -356,29 +358,6 @@ class OCRepositoryContentClassClient extends OCClassSearchTemplate  implements O
         );        
         $pendingItem = new eZPendingActions( $rowPending );
         $pendingItem->store();
-        return $newObject;
-    }
-    
-    function import( $remoteReference, $localLocation )
-    {
-        $definition = $this->attribute( 'definition' );
-        
-        if ( !class_exists( 'OCOpenDataApiNode' ) )
-        {
-            throw new Exception( "Libreria OCOpenDataApiNode non trovata" );
-        }
-        
-        $apiNodeUrl = rtrim( $definition['Url'], '/' ) . '/api/opendata/v1/content/node/' . $remoteReference;
-        $remoteApiNode = OCOpenDataApiNode::fromLink( $apiNodeUrl );
-        if ( !$remoteApiNode instanceof OCOpenDataApiNode )
-        {
-            throw new Exception( "Url remoto \"{$apiNodeUrl}\" non raggiungibile" );
-        }
-        $newObject = $remoteApiNode->createContentObject( $localLocation );
-        if ( !$newObject instanceof eZContentObject )
-        {
-            throw new Exception( "Error importing object" );
-        }
         return $newObject;
     }
 
