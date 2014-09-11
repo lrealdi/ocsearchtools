@@ -12,7 +12,7 @@ class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClien
     protected $contentClass;
 
     /**
-     * @var OCProxyRemoteClassSearchFormAttributeField[]
+     * @var OCRemoteClassSearchFormAttributeField[]
      */
     protected $attributeFields;
 
@@ -41,6 +41,14 @@ class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClien
     protected function initClassMap()
     {
         $definition = $this->attribute( 'definition' );
+        if ( !isset( $definition['LocalClassIdentifier'] ) )
+        {
+            throw new Exception( "Configurazione LocalClassIdentifier non trovata" );
+        }
+        if ( !isset( $definition['MapRemoteLocalAttributes'] ) )
+        {
+            throw new Exception( "Configurazione MapRemoteLocalAttributes non trovata" );
+        }
         $mapClassIdentifier = $definition['LocalClassIdentifier'];
         $mapAttributes = $definition['MapRemoteLocalAttributes'];
         $remoteClassAttributes = array_keys( $mapAttributes );

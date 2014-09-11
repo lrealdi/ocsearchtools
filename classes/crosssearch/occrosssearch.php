@@ -100,7 +100,14 @@ class OCCrossSearch
         }
         if ( $serverInfo['type']  )
         {
-            $clientHandlerName = 'OCRepository' . $serverInfo['type'] . 'Client';            
+            if ( isset( $definition['Handler'] ) )
+            {
+                $clientHandlerName = $definition['Handler'];
+            }
+            else
+            {
+                $clientHandlerName = 'OCRepository' . $serverInfo['type'] . 'Client';
+            }
             if ( class_exists( $clientHandlerName ) )
             {
                 $clientHandler = new $clientHandlerName();
