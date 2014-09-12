@@ -35,4 +35,9 @@ class OCClassSearchTemplate
     {
         $this->attributes = $attributes;
     }
+    
+    public function setAttribute( $key, $value )
+    {
+        $this->attributes[$key] = $value;
+    }
 }

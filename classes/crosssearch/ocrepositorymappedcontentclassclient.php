@@ -1,8 +1,8 @@
 <?php
 
-class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClient
+abstract class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClient
 {    
-    const ACTION_SYNC_OBJECT = 'repository_proxy_content_class_sync';
+    const REMOTE_PREFIX = 'maprepo_';
     
     const SERVER_CLASSDEFINITION_PATH = '/classtools/definition/';
 
@@ -12,9 +12,24 @@ class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClien
     protected $contentClass;
 
     /**
-     * @var OCRemoteClassSearchFormAttributeField[]
+     * @var array
      */
-    protected $attributeFields;
+    protected $remoteClassAttributes;
+    
+    /**
+     * @var array
+     */
+    protected $localeClassAttributes;
+    
+    /**
+     * @var array
+     */
+    protected $mapAttributes;
+    
+    /**
+     * @var string
+     */
+    protected $mapClassIdentifier;
 
     /**
      * @param $parameters
@@ -49,19 +64,20 @@ class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClien
         {
             throw new Exception( "Configurazione MapRemoteLocalAttributes non trovata" );
         }
-        $mapClassIdentifier = $definition['LocalClassIdentifier'];
-        $mapAttributes = $definition['MapRemoteLocalAttributes'];
-        $remoteClassAttributes = array_keys( $mapAttributes );
-        $localeClassAttributes = array_values( $mapAttributes );
+        $this->mapClassIdentifier = $definition['LocalClassIdentifier'];
+        $this->mapAttributes = $definition['MapRemoteLocalAttributes'];
+        $this->remoteClassAttributes = array_keys( $this->mapAttributes );
+        $this->localeClassAttributes = array_values( $this->mapAttributes );
 
         $contentClassDataMap = array();
-        foreach( $remoteClassAttributes as $identifier )
+        foreach( $this->remoteClassAttributes as $identifier )
         {
             $contentClassAttribute = new OCClassSearchTemplate();
             $contentClassAttribute->setAttributes(
                 array(
-                     'id' => $mapClassIdentifier . '-' . $identifier,
+                     'id' => $this->mapClassIdentifier . '-' . $identifier,
                      'identifier' => $identifier,
+                     'name' => $identifier,
                      'is_searchable' => true, //@todo
                      'contentclass_id' => $this->classIdentifier
                 )
@@ -69,9 +85,9 @@ class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClien
             $contentClassDataMap[$identifier] = $contentClassAttribute;
         }
 
-        $contentClass = new OCClassSearchTemplate();
-        $contentClass->setAttributes( array(
-            'identifier' => $mapClassIdentifier,
+        $this->contentClass = new OCClassSearchTemplate();
+        $this->contentClass->setAttributes( array(
+            'identifier' => $this->mapClassIdentifier,
             'data_map' => $contentClassDataMap
         ));
     }
@@ -162,7 +178,7 @@ class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClien
         return true;
     }
 
-    /**
+        /**
      * @param int $remoteNodeID
      * @param int $localParentNodeID
      *
@@ -170,29 +186,90 @@ class OCRepositoryMappedContentClassClient extends OCRepositoryContentClassClien
      * @throws Exception
      */
     public function import( $remoteNodeID, $localParentNodeID )
-    {
+    {        
         if ( !class_exists( 'OCOpenDataApiNode' ) )
         {
             throw new Exception( "Libreria OCOpenDataApiNode non trovata" );
         }
-        $apiNodeUrl = rtrim( $this->attributes['definition']['Url'], '/' ) . '/api/opendata/v1/content/node/' . $remoteNodeID;
+        $apiNodeUrl = rtrim( $this->attributes['definition']['Url'], '/' ) . '/api/opendata/v1/content/node/' . $remoteNodeID;    
         $remoteApiNode = OCOpenDataApiNode::fromLink( $apiNodeUrl );
         if ( !$remoteApiNode instanceof OCOpenDataApiNode )
         {
             throw new Exception( "Url remoto \"{$apiNodeUrl}\" non raggiungibile" );
         }
-        $newObject = $remoteApiNode->createContentObject( $localParentNodeID );
+        
+        $attributeList = array();
+        foreach( $this->remoteClassAttributes as $identifier )
+        {
+            if ( isset( $remoteApiNode->fields[$identifier] ) )
+            {
+                $fieldArray = $remoteApiNode->fields[$identifier];
+                
+                $localeIdentifier = isset( $this->mapAttributes[$identifier] ) ? $this->mapAttributes[$identifier] : false;
+                
+                if ( $localeIdentifier )
+                {
+                    if ( strpos( $localeIdentifier, '::' ) === 0 )
+                    {
+                        $localeIdentifier = str_replace( '::', '', $localeIdentifier );
+                        $attributeList[$localeIdentifier] = $this->importAttribute( $identifier, $localeIdentifier, $fieldArray );
+                    }
+                    else
+                    {
+                        switch( $fieldArray['type'] )
+                        {
+                            case 'ezxmltext':
+                                $attributeList[$localeIdentifier] = SQLIContentUtils::getRichContent( $fieldArray['value'] );
+                                break;
+                            case 'ezbinaryfile':
+                            case 'ezimage':
+                                $attributeList[$localeIdentifier] = !empty( $fieldArray['value'] ) ? SQLIContentUtils::getRemoteFile( $fieldArray['value'] ) : '';
+                                break;
+                            default:
+                                $attributeList[$localeIdentifier] = $fieldArray['string_value'];
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        $params                     = array();        
+        $params['class_identifier'] = $this->mapClassIdentifier;
+        $params['remote_id']        = static::REMOTE_PREFIX . $remoteApiNode->metadata['objectRemoteId'];
+        $params['parent_node_id']   = $localParentNodeID;
+        $params['attributes']       = $attributeList;
+        
+        $newObject = eZContentFunctions::createAndPublishObject( $params );
         if ( !$newObject instanceof eZContentObject )
         {            
             throw new Exception( "Fallita la creazione dell'oggetto da nodo remoto" );
         }
-        $rowPending = array(
-            'action'        => self::ACTION_SYNC_OBJECT,            
-            'param'         => $newObject->attribute( 'id' )
-        );        
-        $pendingItem = new eZPendingActions( $rowPending );
-        $pendingItem->store();
+        
         return $newObject;
     }
+    
+    /**
+     * Crea un oggetto a partire da un fieldArray di tipo ezimage, ezbinaryfile
+     * @see eZContentUpload
+     * @params array $fieldArray
+     * @return int content object id
+     */
+    protected function createMedia( $fieldArray )
+    {
+        $filePath = SQLIContentUtils::getRemoteFile( $fieldArray['value'] );
+        $upload = new eZContentUpload();
+        $result = array();
+        
+        if ( $upload->handleLocalFile( $result, $filePath, 'auto', false ) == true )
+        {            
+            return $result['contentobject_id'];
+        }
+        eZDebug::writeNotice( var_export( $result['notices'] ), __METHOD__ );
+        eZDebug::writeError( var_export( $result['errors'] ), __METHOD__ );
+        return '';
+    }
+    
+    abstract protected function importAttribute( $remoteIdentifier, $localeIdentifier, $fieldArray );
 
 }
