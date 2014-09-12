@@ -1,6 +1,7 @@
 <?php
 require 'autoload.php';
 
+$cli = eZCLI::instance();
 $script = eZScript::instance( array( 'description' => ( "Reindicizza\n\n" ),
                                      'use-session' => false,
                                      'use-modules' => true,
@@ -14,7 +15,6 @@ $options = $script->getOptions( '[class:]',
 );
 $script->initialize();
 $script->setUseDebugAccumulators( true );
-
 
 try
 {
