@@ -20,12 +20,6 @@ $options = $script->getOptions(
 $script->initialize();
 $script->setUseDebugAccumulators( true );
 
-if( !SQLIImportToken::importIsRunning() )
-{
-    $cli->output( "Registro un token sqliimport" );
-    SQLIImportToken::registerNewImport();
-}
-
 $rsyncStatusName = 'rsync_status';
 $statusRunning = 1;
 $statusHalted = 0;
