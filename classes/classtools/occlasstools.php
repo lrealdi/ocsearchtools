@@ -6,7 +6,7 @@ class OCClassTools
     const WARNING = 1;
     const ERROR = 2;
 
-    public static $remoteUrl = 'http://data.opencontent.it/classtools/classdefinition/';
+    public static $remoteUrl = 'http://data.opencontent.it/classtools/definition/';
     
     public $EditLanguage = 'ita-IT';
     
