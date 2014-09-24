@@ -55,7 +55,7 @@ else
         }
         echo '</table>';
         
-        $result = $searchEngine->addObject( $object, true );            
+        $result = $searchEngine->addObject( $object, true );
         echo '<h2>Index result: ' . var_export( $result, 1 ) . '</h2>';
         
         echo '<h3>Xml sent to engine:</h3>';
@@ -306,15 +306,15 @@ function fakeAddObject( $contentObject )
 
         $docList[$languageCode] = $doc;
         
-        $generalPlugins = eZINI::instance( 'ezfind.ini' )->variable( 'IndexPlugins', 'General' );
-        $classPlugins   = eZINI::instance( 'ezfind.ini' )->variable( 'IndexPlugins', 'Class' );        
+        $generalPlugins = (array) eZINI::instance( 'ezfind.ini' )->variable( 'IndexPlugins', 'General' );
+        $classPlugins   = (array) eZINI::instance( 'ezfind.ini' )->variable( 'IndexPlugins', 'Class' );
         if ( !empty( $generalPlugins ) )
         {
             foreach ( $generalPlugins as $pluginClassString )
             {
                 if( !class_exists( $pluginClassString ) )
                 {
-                    eZDebug::writeError( "Unable to find the PHP class '$classname' defined for index time plugins for eZ Find", __METHOD__ );
+                    eZDebug::writeError( "Unable to find the PHP class '$pluginClassString' defined for index time plugins for eZ Find", __METHOD__ );
                     continue;
                 }
                 $plugin = new $pluginClassString;
@@ -330,7 +330,7 @@ function fakeAddObject( $contentObject )
             if ( class_exists( $pluginClassString ) )
             {
                 $plugin = new $pluginClassString;
-                if ($plugin instanceof ezfIndexPlugin)
+                if ( $plugin instanceof ezfIndexPlugin )
                 {
                         $plugin->modify( $contentObject, $docList );
                 }
