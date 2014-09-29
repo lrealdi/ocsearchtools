@@ -18,7 +18,7 @@ $iDisplayLength = $http->hasGetVariable( 'iDisplayLength' ) ? $http->getVariable
 /*
  * Ordering
  */
-$sortBy = array( 'name' => 'asc' );
+$sortBy = array( eZSolr::getMetaFieldName( 'sort_name', 'sort' ) => 'asc' );
 if ( $http->hasGetVariable( 'iSortCol_0' ) )
 {    
     for ( $i=0 ; $i<intval( $http->getVariable( 'iSortingCols' ) ); $i++ )
@@ -132,15 +132,27 @@ foreach( $search['SearchResult'] as $item )
     $row = array();    
     for ( $i=0 ; $i<count( $fields ); $i++ )
     {
-        if ( $fields[$i] == 'published' )
+        if ( $fields[$i] == 'published' || $fields[$i] == 'published_dt' )
         {
             $timestamp = strtotime( $item[$fields[$i]] );
-            $row[] = date( 'd/m/Y H:i', $timestamp );
-        }
+            $row[] = date( 'd/m/Y', $timestamp );
+        }        
         elseif ( isset( $item[$fields[$i]] ) )
+        {
             $row[] = $item[$fields[$i]];
+        }
         elseif ( isset( $item['fields'][$fields[$i]] ) )
-            $row[] = $item['fields'][$fields[$i]];        
+        {
+            if( substr( $fields[$i], -2 ) == 'dt' )
+            {
+                $timestamp = strtotime( $item['fields'][$fields[$i]] );
+                $row[] = date( 'd/m/Y', $timestamp );
+            }
+            else
+            {
+                $row[] = $item['fields'][$fields[$i]];
+            }
+        }
         elseif ( strpos( $fields[$i], 'meta' ) === 0 ) //@todo
         {
             $fieldPart = explode( '_', $fields[$i] );

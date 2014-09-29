@@ -2,6 +2,7 @@
 
 [IndexPlugins]
 General[]=ezfIndexEventDuration
+General[]=ezfIndexTimeTable
 
 [IndexOptions]
 OptimizeOnCommit=disabled

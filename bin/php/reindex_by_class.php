@@ -71,13 +71,15 @@ try
     $offset = 0;
     $limit = 50;
     
-    $searchEngine = eZSearch::getEngine();
+    //$searchEngine = eZSearch::getEngine();    
+    //
+    //if ( !$searchEngine instanceof ezpSearchEngine )
+    //{
+    //    $cli->error( "The configured search engine does not implement the ezpSearchEngine interface or can't be found." );
+    //    $script->shutdown( 1 );
+    //}
     
-    if ( !$searchEngine instanceof ezpSearchEngine )
-    {
-        $cli->error( "The configured search engine does not implement the ezpSearchEngine interface or can't be found." );
-        $script->shutdown( 1 );
-    }
+    $searchEngine = new eZSolr();
     
     $needRemoveWithUpdate = $searchEngine->needRemoveWithUpdate();
     
