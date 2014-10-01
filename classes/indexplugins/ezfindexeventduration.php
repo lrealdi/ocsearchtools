@@ -51,8 +51,8 @@ if ( interface_exists( 'ezfIndexPlugin' ) )
                             $docList[$languageCode]->addField('extra_event_duration_s', $duration );
                         }
                     }
-                    else
-                    {
+                    elseif ( is_array( $docList[$languageCode]->Doc ) && !isset( $docList[$languageCode]->Doc['extra_event_duration_s'] ))
+                    {                        
                         $docList[$languageCode]->addField('extra_event_duration_s', $duration );
                     }
                 }
