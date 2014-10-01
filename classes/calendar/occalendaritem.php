@@ -121,7 +121,7 @@ class OCCalendarItem
             {
                 throw new Exception( "Param 'attr_to_time_dt' is not a valid date" );
             }
-            if ( $toDate->getTimestamp() == 0 ) // workarpund in caso di eventi (importati) senza data di termine
+            if ( $toDate->getTimestamp() == 0 || $toDate->getTimestamp() == $fromDate->getTimestamp() ) // workarpund in caso di eventi (importati) senza data di termine
             {
                 $toDate = clone $this->data['fromDateTime'];
                 $toDate->add( new DateInterval('PT1H') );
