@@ -180,25 +180,26 @@ class OCCalendarData
         $endOfMonthDateTime = DateTime::createFromFormat( 'H i s n j Y', implode( ' ', $endOfMonthArray ), self::timezone() );                  
         $this->parameters['end_weekday'] = date( 'w', $endOfMonthDateTime->getTimestamp() );
         $fromTimeStamp = $startDateTime->format( 'U' );
-        $fromDate = ezfSolrDocumentFieldBase::preProcessValue( $startDateTime->getTimestamp(), 'date' );
+        $this->parameters['search_from_solr'] = ezfSolrDocumentFieldBase::preProcessValue( $startDateTime->getTimestamp(), 'date' );
         $this->parameters['search_from_timestamp'] = $startDateTime->getTimestamp();
         
         // end day
         $endDateTime = clone $startDateTime;
         $endDateTime->add( $interval );
         $endTimeStamp = $endDateTime->format( 'U' );
-        $toDate = ezfSolrDocumentFieldBase::preProcessValue( $endDateTime->getTimestamp() - 1 , 'date' );                
+        $this->parameters['search_to_solr'] = ezfSolrDocumentFieldBase::preProcessValue( $endDateTime->getTimestamp() - 1 , 'date' );
         $this->parameters['search_to_timestamp'] = $endDateTime->getTimestamp();
+        $this->parameters['search_to_picker_date'] = date( self::PICKER_DATE_FORMAT, $endDateTime->getTimestamp() );
         
         // filter        
         $this->filters[] = array(
             'or',
-            'attr_from_time_dt:[' . $fromDate . ' TO ' . $toDate . ']',
-            'attr_to_time_dt:[' . $fromDate . ' TO ' . $toDate . ']',
+            'attr_from_time_dt:[' . $this->parameters['search_from_solr'] . ' TO ' . $this->parameters['search_to_solr'] . ']',
+            'attr_to_time_dt:[' . $this->parameters['search_from_solr'] . ' TO ' . $this->parameters['search_to_solr'] . ']',
             array(
                 'and',
-                'attr_from_time_dt:[* TO ' . $fromDate . ']',
-                'attr_to_time_dt:[' . $toDate . ' TO *]'
+                'attr_from_time_dt:[* TO ' . $this->parameters['search_from_solr'] . ']',
+                'attr_to_time_dt:[' . $this->parameters['search_to_solr'] . ' TO *]'
             )
         );
         
