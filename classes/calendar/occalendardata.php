@@ -313,7 +313,12 @@ class OCCalendarData
             {
                 $events[] = $event;
             }
-        }        
+        }
+        $timeTableEvents = $this->fetchTimeTableEvents();
+        if ( count( $timeTableEvents ) )
+        {
+            $events = self::reorderEvents( array_merge( $events, $timeTableEvents ) );
+        }
         //eZDebug::writeNotice( $events, __METHOD__ );  
         $this->data['search_count'] = count( $events );
         
@@ -332,6 +337,47 @@ class OCCalendarData
         $this->data['day_by_day'] = $eventsByDay;
         //eZDebug::writeNotice( $eventsByDay, __METHOD__ ); 
         //eZDebug::writeNotice( $this->data['search_facets'], __METHOD__ );         
+    }
+
+    protected static function reorderEvents( $items )
+    {
+        usort(
+            $items, function( OCCalendarItem $a, OCCalendarItem $b ) {
+                return intval( $a->attribute( 'fromDateTime' ) > $b->attribute( 'fromDateTime' ) );
+            }
+        );
+        return $items;
+    }
+
+    protected function fetchTimeTableEvents()
+    {
+        $events = array();
+
+        $filters = array(
+            'or',
+            'attr_timetable_from_time_dt:[' . $this->parameters['search_from_solr'] . ' TO ' . $this->parameters['search_to_solr'] . ']',
+            'attr_timetable_to_time_dt:[' . $this->parameters['search_from_solr'] . ' TO ' . $this->parameters['search_to_solr'] . ']',
+            array(
+                'and',
+                'attr_timetable_from_time_dt:[* TO ' . $this->parameters['search_from_solr'] . ']',
+                'attr_timetable_to_time_dt:[' . $this->parameters['search_to_solr'] . ' TO *]'
+            )
+        );
+
+        $solrFetchParams = array(
+            'SearchOffset' => 0,
+            'SearchLimit' => 1000,
+            'Filter' => $filters,
+            'SearchSubTreeArray' => $this->parameters['subtree']
+        );
+        $solrSearch = new eZSolr();
+        $solrResult = $solrSearch->search( $this->parameters['query'], $solrFetchParams );
+
+        foreach( $solrResult['SearchResult'] as $item )
+        {
+            $events = array_merge( $events, OCCalendarTimeTable::getEvents( $item, $this->parameters ) );
+        }
+        return $events;
     }
     
     protected function sortFacets( $resultFacets )

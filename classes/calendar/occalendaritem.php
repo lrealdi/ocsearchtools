@@ -113,7 +113,7 @@ class OCCalendarItem
         {
             throw new Exception( "Key 'attr_from_time_dt' not found" );
         }
-        
+
         if ( isset( $this->fields['attr_to_time_dt'] ) )
         {
             $toDate = self::getDateTime( $this->fields['attr_to_time_dt'] );
@@ -121,12 +121,22 @@ class OCCalendarItem
             {
                 throw new Exception( "Param 'attr_to_time_dt' is not a valid date" );
             }
-            $this->data['toDateTime'] = $toDate;            
-            $this->data['to'] = $toDate->getTimestamp();            
+            if ( $toDate->getTimestamp() == 0 ) // workarpund in caso di eventi (importati) senza data di termine
+            {
+                $toDate = clone $this->data['fromDateTime'];
+                $toDate->add( new DateInterval('PT1H') );
+            }
+
+            $this->data['toDateTime'] = $toDate;
+            $this->data['to'] = $toDate->getTimestamp();
         }
         else
         {
-            throw new Exception( "Key 'attr_to_time_dt' not found" );
+            //throw new Exception( "Key 'attr_to_time_dt' not found" );
+            $toDate = clone $this->data['fromDateTime'];
+            $toDate->add( new DateInterval('PT1H') );
+            $this->data['toDateTime'] = $toDate;
+            $this->data['to'] = $toDate->getTimestamp();
         }
         
         $this->data['duration'] = $this->data['to'] - $this->data['from'];
