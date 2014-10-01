@@ -24,30 +24,34 @@ else
         echo '<th>Identifier</th>';
         echo '<th>Metadata</th>';
         echo '<th>ezfSolrDocumentFieldBase::getData</th>';
-        echo '<tr>';
+        echo '</tr>';
+        $index = 0;
         foreach( $attribues as $i => $a )
         {
+            $index++;
+            $color = ( $index & 1 ) ? '#fff' : '#eee';
+            
             if ( $a->attribute( 'contentclass_attribute' )->attribute( 'is_searchable' ) > 0 )
             {
-                echo '<tr>';
+                echo '<tr style="background:'.$color.'">';
                 echo '<td>';
                 echo $i . '<br /><small>(' . $a->attribute( 'data_type_string' ) . ')</small>';
-                echo '</td><td>';
-                var_dump( $a->metadata() );
-                echo '</td><td>';
+                echo '</td><td><pre>';
+                print_r( $a->metadata() );
+                echo '</pre></td><td><pre>';
                 $documentFieldBase = ezfSolrDocumentFieldBase::getInstance( $a );
-                var_dump( $documentFieldBase->getData() ) ;
-                echo '</td>';
+                print_r( $documentFieldBase->getData() ) ;
+                echo '</pre></td>';
                 echo '</tr>';
             }
             else
             {
-                echo '<tr>';
+                echo '<tr style="background:'.$color.'">';
                 echo '<td>';
                 echo $i . '<br /><small>(' . $a->attribute( 'data_type_string' ) . ')</small>';
-                echo '</td><td>';
-                var_dump( $a->metadata() );
-                echo '</td><td>';
+                echo '</td><td><pre>';
+                print_r( $a->metadata() );
+                echo '</pre></td><td>';
                 echo '<small><em>(not searchable)</em></small>';
                 echo '</td>';
                 echo '</tr>';

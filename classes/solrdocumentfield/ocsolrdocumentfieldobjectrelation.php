@@ -240,15 +240,18 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                 foreach ( $fieldNameArray as $fieldNameValue )
                 {
                     //eZCLI::instance()->output(var_dump($metaData));
-                    if ( isset( $metaData[$fieldNameValue] ) )
+                    $finalValue = trim( $finalValue, "\t\r\n " );
+                    if ( !empty( $finalValue ) )
                     {
-                        $metaData[$fieldNameValue] = array_merge( $metaData[$fieldNameValue], array( trim( $finalValue, "\t\r\n " ) ) );
+                        if ( isset( $metaData[$fieldNameValue] ) )
+                        {
+                            $metaData[$fieldNameValue] = array_merge( $metaData[$fieldNameValue], array( $finalValue ) );
+                        }
+                        else
+                        {
+                            $metaData[$fieldNameValue] = array( $finalValue );
+                        }
                     }
-                    else
-                    {
-                        $metaData[$fieldNameValue] = array( trim( $finalValue, "\t\r\n " ) );
-                    }
-                    
                 }
         
             }
