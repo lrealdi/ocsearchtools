@@ -8,6 +8,7 @@ class SearchFormOperator
         'getFilterParameter',
         'getFilterParameters',
         'getFilterUrlSuffix',
+        'getFilterHiddenInput',
         'in_array_r',
         'sort',
         'asort',
@@ -323,6 +324,47 @@ class SearchFormOperator
                 }
                 $operatorValue = $urlSuffix;
                 
+            } break;
+
+            case 'getFilterHiddenInput':
+            {
+                $filterSearchHash = $operatorValue;
+                $input = array();
+                $tempArray = array();
+                foreach( $filterSearchHash as $filter )
+                {
+                    if ( is_array( $filter ) )
+                    {
+                        foreach( $filter as $f )
+                        {
+                            if ( ( 'and' != $f ) and ( 'or' != $f ) )
+                            {
+                                if ( !in_array( $f, $tempArray ) )
+                                {
+                                    $tempArray[] = $f;
+                                    $input[] = $f;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if ( !in_array( $filter, $tempArray ) )
+                        {
+                            $tempArray[] = $filter;
+                            $input[] = $filter;
+                        }
+                    }
+                }
+
+                $html = '';
+                foreach( $input as $i )
+                {
+                    $html .= "<input type='hidden' name='filter[]' value='$i' />";
+                }
+
+                $operatorValue = $html;
+
             } break;
             
             case 'addQuoteOnFilter':
