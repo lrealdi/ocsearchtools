@@ -1,38 +1,44 @@
 <?php
 
-if ( NULL == $Params['NodeID'] )
+$nodeID = false;
+$node = eZContentObjectTreeNode::fetch( $Params['NodeID'] );
+if ( $node instanceof eZContentObjectTreeNode )
 {
-    echo 'Specificare un node ID';
+    $nodeID = $Params['NodeID'];
+}
+
+if ( !$nodeID )
+{
+    echo 'Specificare un node ID valido';
 }
 else
 {
-    $NodeID = $Params['NodeID'];
-    $searchEngine = new eZSolr();
-    $params = array( 'Limitation'  => array(),                     
-                     'LoadDataMap' => false
-                   );
-    $length = 50;
-    
-    $count = eZContentObjectTreeNode::subTreeCountByNodeID( $params, $NodeID );
-    echo "<h2>{$count} nodi</h2>"; flush();    
-    echo '<ul>';
-    $params = array_merge( $params, array( 'Offset' => 0 , 'Limit' => $length ) );
-    do
+    $alreadyPending = false;
+    $pendings = eZPendingActions::fetchByAction( eZSolr::PENDING_ACTION_INDEX_SUBTREE );
+    foreach( $pendings as $pending )
     {
-        $items = eZContentObjectTreeNode::subTreeByNodeID( $params, $NodeID );
-        
-        foreach ( $items as $item )
-        {            
-            $result = $searchEngine->addObject( $item->attribute( 'object' ), true );            
-            echo '<li>Node ' . $item->attribute( 'node_id' ) . ' object ' . $item->attribute( 'contentobject_id' )
-            . ' index result: ' . var_export( $result, 1 ) . '</li>';
-            ob_flush();
-            usleep(50000);
+        if ( $pending->attribute( 'param' ) == $nodeID )
+        {
+            $alreadyPending = true;
+            break;
         }
-        usleep(50000);
-        $params['Offset'] += $length;
-    } while ( count( $items ) == $length );
-    echo '</ul>';
+    }
+    if ( $alreadyPending )
+    {
+        echo "Il processo di indicizzazione per il sottoalbero di $nodeID è in coda";
+    }
+    else
+    {
+        $pendingAction = new eZPendingActions(
+            array(
+                'action' => eZSolr::PENDING_ACTION_INDEX_SUBTREE,
+                'created' => time(),
+                'param' => $nodeID
+            )
+        );
+        $pendingAction->store();
+        echo "Accodato il processo di indicizzazione per il sottoalbero di $nodeID";
+    }    
 } 
 
 eZDisplayDebug();
