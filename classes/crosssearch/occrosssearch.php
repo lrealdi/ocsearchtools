@@ -38,7 +38,7 @@ class OCCrossSearch
     {
         $ini = eZINI::instance( 'ocrepository.ini' );
         $repositories = array();
-        $availableRepositories = $ini->variable( 'Client', 'AvailableRepositories' );
+        $availableRepositories = $ini->hasVariable( 'Client', 'AvailableRepositories' ) ? $ini->variable( 'Client', 'AvailableRepositories' ) : array();
         foreach ( $availableRepositories as $repositoryID )
         {
             $definition = self::isAvailableRepository( $repositoryID );
