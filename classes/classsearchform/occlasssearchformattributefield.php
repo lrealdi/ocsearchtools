@@ -89,10 +89,12 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
                     }
                     
                     $this->values[$index]['query'] = OCFacetNavgationHelper::encodeValue( $this->values[$index]['query'] );
+                    $this->values[$index]['raw_name'] = $value['name'];
                     
                     if ( isset( $value['count'] ) && $value['count'] > 0 )
                     {
                         $this->values[$index]['name'] = $value['name'] . ' (' . $value['count'] . ')';
+                        $this->values[$index]['count'] = $value['count'];
                     }
                 }
             }            
@@ -116,17 +118,23 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
             $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
             $addQuote = false;
         }
+        
+        if ( is_array( $requestValue ) && count( $requestValue ) == 1 )
+        {
+            $requestValue = array_shift( $requestValue );
+        }
+        
         if ( is_array( $requestValue ) )
         {
-            $values = array();
+            $values = array( 'or' );
             foreach( $requestValue as $v )
             {
                 $values[] = $fieldName . ':' . $fetcher->encode( $v, $addQuote );
             }
-            $filters[] = array( 'or', $values );
+            $filters[] = $values;
         }
         else
-        {
+        {            
             $filters[] = $fieldName . ':' . $fetcher->encode( $requestValue, $addQuote );
         }
 
