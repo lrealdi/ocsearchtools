@@ -19,7 +19,8 @@ else
         
         echo "<h2>Indexing object ID: <em>" . $object->attribute( 'id' ) . "</em><br />Name: <em>" . $object->attribute( 'name' ) . "</em><br /> Main node ID:  <em>" . $object->attribute( 'main_node_id' ) . "</em><br />Class: <em>" . $object->attribute( 'class_identifier' ) . "</em></h2>";
         $attribues = $object->dataMap();
-        echo '<table cellpadding="10">';
+        echo "<a href='#' onclick='javascript:document.getElementById(\"details\").style.display=\"block\"; return false;'>Vedi dettagli</a>";
+        echo '<table id="details" cellpadding="10" width="100%" style="display:none">';
         echo '<tr>';
         echo '<th>Identifier</th>';
         echo '<th>Metadata</th>';
@@ -36,12 +37,12 @@ else
                 echo '<tr style="background:'.$color.'">';
                 echo '<td>';
                 echo $i . '<br /><small>(' . $a->attribute( 'data_type_string' ) . ')</small>';
-                echo '</td><td><pre>';
+                echo '</td><td><small>';
                 print_r( $a->metadata() );
-                echo '</pre></td><td><pre>';
+                echo '</small></td><td><small>';
                 $documentFieldBase = ezfSolrDocumentFieldBase::getInstance( $a );
                 print_r( $documentFieldBase->getData() ) ;
-                echo '</pre></td>';
+                echo '</small></td>';
                 echo '</tr>';
             }
             else
@@ -49,9 +50,9 @@ else
                 echo '<tr style="background:'.$color.'">';
                 echo '<td>';
                 echo $i . '<br /><small>(' . $a->attribute( 'data_type_string' ) . ')</small>';
-                echo '</td><td><pre>';
+                echo '</td><td><small>';
                 print_r( $a->metadata() );
-                echo '</pre></td><td>';
+                echo '</small></td><td>';
                 echo '<small><em>(not searchable)</em></small>';
                 echo '</td>';
                 echo '</tr>';
