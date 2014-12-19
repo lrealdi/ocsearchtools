@@ -1,4 +1,109 @@
 <?php
+
+$module = $Params['ObjectID'];
+$tpl = eZTemplate::factory();
+
+$error = false;
+$info = false;
+$detail = false;
+$xml = false;
+$solr = false;
+
+$objectID = $Params['ObjectID'];
+
+if ( NULL == $Params['ObjectID'] )
+{
+    $error = "Object ID or object remote_id not found";
+}
+else
+{
+    $object = eZContentObject::fetch( intval( $objectID ) );
+    if ( !$object instanceof eZContentObject )
+    {
+        $object = eZContentObject::fetchByRemoteID( $objectID );
+    }
+    
+    if ( $object instanceof eZContentObject )
+    {
+        if ( $object->attribute( 'can_read' ) )
+        {
+            $searchEngine = new eZSolr();
+            $result = $searchEngine->addObject( $object, true );
+            $info = array(
+                'object' => $object,
+                'result' => $result
+            );
+            $detail = array();
+            $attributes = $object->dataMap();
+            foreach( $attributes as $attribute )
+            {
+                $isSearchable = $attribute->attribute( 'contentclass_attribute' )->attribute( 'is_searchable' );
+                $documentFieldBase = ezfSolrDocumentFieldBase::getInstance( $attribute );
+                $detail[] = array(
+                  'attribute' => $attribute,
+                  'name' =>  $attribute->attribute( 'contentclass_attribute_name' ),
+                  'identifier' =>  $attribute->attribute( 'contentclass_attribute_identifier' ),
+                  'data_type_string' => $attribute->attribute( 'data_type_string' ),
+                  'is_searchable' => $isSearchable,
+                  'ez_metadata' => $isSearchable ? trim( print_r( $attribute->metadata(), 1 ) ) : false,
+                  'solr_metadata' => $isSearchable ? trim( print_r( $documentFieldBase->getData(), 1 ) ) : false,
+                  'solr_metadata_class' => $isSearchable ? get_class( $documentFieldBase ) : false,
+                );
+            }
+            
+            $xml = array();
+            $xmlData = fakeAddObject( $object );
+            foreach ( $xmlData as $doc )
+            {
+                if ( is_object( $doc ) )
+                {
+                    if ( is_object( $doc->Doc ) )
+                    {
+                        $doc->Doc->formatOutput = true;
+                        $xml[] = $doc->Doc->saveXML( $doc->RootElement );
+                    }
+                    else
+                    {
+                        $dom = new DOMDocument;
+                        $dom->preserveWhiteSpace = FALSE;
+                        $dom->loadXML( $doc->docToXML() );
+                        $dom->formatOutput = TRUE;
+                        $xml[] = $dom->saveXML( $dom->documentElement );
+                    }
+                }
+            }
+            
+            $solrBase = new eZSolrBase();
+            $version = json_decode( eZHTTPTool::getDataByURL( $solrBase->SearchServerURI . '/admin/system/?wt=json' ), true );
+            $solr = array(
+              'ping' => trim( print_r( $solrBase->ping(), 1 ) ),
+              'version' => trim( print_r( $version, 1 ) )
+            );
+            
+        }
+        else
+        {
+            $error = "Current user can not read object {$objectID}";
+        }
+    }
+    else
+    {
+        $error = "Object {$objectID} not found";
+    }
+    
+}
+
+$tpl->setVariable( 'error', $error );
+$tpl->setVariable( 'info', $info );
+$tpl->setVariable( 'detail', $detail );
+$tpl->setVariable( 'xml', $xml );
+$tpl->setVariable( 'solr', $solr );
+
+echo $tpl->fetch( 'design:index/object.tpl' );
+eZDisplayDebug();
+eZExecution::cleanExit();
+
+/*
 if ( NULL == $Params['ObjectID'] )
 {
     echo 'Specificare un object ID';
@@ -40,7 +145,7 @@ else
                 echo '</td><td><small>';
                 print_r( $a->metadata() );
                 echo '</small></td><td><small>';
-                $documentFieldBase = ezfSolrDocumentFieldBase::getInstance( $a );
+                
                 print_r( $documentFieldBase->getData() ) ;
                 echo '</small></td>';
                 echo '</tr>';
@@ -61,7 +166,7 @@ else
         echo '</table>';
         
         $result = $searchEngine->addObject( $object, true );
-        echo '<h2>Index result: ' . var_export( $result, 1 ) . '</h2>';
+        echo '<h2>Index result: ' . print_r( $result, 1 ) . '</h2>';
         
         echo '<h3>Xml sent to engine:</h3>';
         $xml = fakeAddObject( $object );
@@ -92,9 +197,7 @@ else
         echo 'Non esiste oggetto con ID #' . $ObjectID;
     }
 }
-
-eZDisplayDebug();
-eZExecution::cleanExit();
+*/
 
 
 function fakeAddObject( $contentObject )
