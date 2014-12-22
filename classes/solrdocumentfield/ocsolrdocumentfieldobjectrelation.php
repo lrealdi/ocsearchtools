@@ -169,19 +169,36 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
 
         if ( $contentObjectAttribute )
         {
-            $metaDataArray = $contentObjectAttribute->metaData();
-
-            if( !is_array( $metaDataArray ) )
+            //$metaDataArray = $contentObjectAttribute->metaData();
+            //
+            //if( !is_array( $metaDataArray ) )
+            //{
+            //    $metaDataArray = array( $metaDataArray );
+            //}
+            //
+            //foreach( $metaDataArray as $item )
+            //{
+            //    $metaData .= $item['text'] . ' ';
+            //}
+            $metaDataArray = array();
+            $content = $contentObjectAttribute->content();
+            $language = $contentObjectAttribute->attribute( 'language_code' );
+            foreach( $content['relation_list'] as $relationItem )
             {
-                $metaDataArray = array( $metaDataArray );
+                $subObjectID = $relationItem['contentobject_id'];
+                if ( !$subObjectID )
+                    continue;
+                
+                $object = eZContentObject::fetch( $subObjectID );
+                if ( $object instanceof eZContentObject )
+                {
+                    $metaDataArray[] = $object->name( false, $contentObjectAttribute->attribute( 'language_code' ) );
+                }
             }
-
-            foreach( $metaDataArray as $item )
-            {
-                $metaData .= $item['text'] . ' ';
-            }
+            
         }
-        return trim( $metaData, "\t\r\n " );
+        
+        return implode( ' ', $metaDataArray );
     }
     
 
@@ -195,7 +212,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
         
         if ( $relatedObject instanceof eZContentObject && $relatedObject->attribute( 'main_node_id' ) > 0 )
         {
-            $objectName = $relatedObject->Name;
+            $objectName = $relatedObject->name( false, $this->ContentObjectAttribute->attribute( 'language_code' ) );
             $fieldName = parent::generateSubattributeFieldName( $contentClassAttribute,
                                                                 'name',
                                                                 self::DEFAULT_SUBATTRIBUTE_TYPE );
@@ -288,7 +305,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
 
                 if ( $relatedObject )
                 {
-                    $returnArray = $this->getArrayrelatedObject($relatedObject, $contentClassAttribute);			
+                    $returnArray = $this->getArrayrelatedObject( $relatedObject, $contentClassAttribute );
                 }
                 return $returnArray;
 		
@@ -316,7 +333,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                     }                       
                     
                     $metaAttributeValues = eZSolr::getMetaAttributesForObject( $subObject->attribute( 'contentobject' ) );
-                    
+
                     foreach ( $metaAttributeValues as $metaInfo )
                     {
                       
