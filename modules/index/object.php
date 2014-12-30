@@ -29,6 +29,12 @@ else
         {
             $searchEngine = new eZSolr();
             $result = $searchEngine->addObject( $object, true );
+            $xmlData = fakeAddObject( $object );
+            if ( $xmlData == false )
+            {
+                $result = false;
+                $xmlData = array();
+            }
             $info = array(
                 'object' => $object,
                 'result' => $result
@@ -52,7 +58,6 @@ else
             }
             
             $xml = array();
-            $xmlData = fakeAddObject( $object );
             foreach ( $xmlData as $doc )
             {
                 if ( is_object( $doc ) )
@@ -103,103 +108,6 @@ echo $tpl->fetch( 'design:index/object.tpl' );
 eZDisplayDebug();
 eZExecution::cleanExit();
 
-/*
-if ( NULL == $Params['ObjectID'] )
-{
-    echo 'Specificare un object ID';
-}
-else
-{
-    $ObjectID = $Params['ObjectID'];
-    $searchEngine = new eZSolr();
-    $object = eZContentObject::fetch( intval( $ObjectID ) );
-    
-    if ( $object )
-    {
-        if ( !$object->attribute( 'can_read' ) )
-        {
-            return $Module->handleError( eZError::KERNEL_ACCESS_DENIED, 'kernel' );
-            eZExecution::cleanExit();
-        }
-        
-        echo "<h2>Indexing object ID: <em>" . $object->attribute( 'id' ) . "</em><br />Name: <em>" . $object->attribute( 'name' ) . "</em><br /> Main node ID:  <em>" . $object->attribute( 'main_node_id' ) . "</em><br />Class: <em>" . $object->attribute( 'class_identifier' ) . "</em></h2>";
-        $attribues = $object->dataMap();
-        echo "<a href='#' onclick='javascript:document.getElementById(\"details\").style.display=\"block\"; return false;'>Vedi dettagli</a>";
-        echo '<table id="details" cellpadding="10" width="100%" style="display:none">';
-        echo '<tr>';
-        echo '<th>Identifier</th>';
-        echo '<th>Metadata</th>';
-        echo '<th>ezfSolrDocumentFieldBase::getData</th>';
-        echo '</tr>';
-        $index = 0;
-        foreach( $attribues as $i => $a )
-        {
-            $index++;
-            $color = ( $index & 1 ) ? '#fff' : '#eee';
-            
-            if ( $a->attribute( 'contentclass_attribute' )->attribute( 'is_searchable' ) > 0 )
-            {
-                echo '<tr style="background:'.$color.'">';
-                echo '<td>';
-                echo $i . '<br /><small>(' . $a->attribute( 'data_type_string' ) . ')</small>';
-                echo '</td><td><small>';
-                print_r( $a->metadata() );
-                echo '</small></td><td><small>';
-                
-                print_r( $documentFieldBase->getData() ) ;
-                echo '</small></td>';
-                echo '</tr>';
-            }
-            else
-            {
-                echo '<tr style="background:'.$color.'">';
-                echo '<td>';
-                echo $i . '<br /><small>(' . $a->attribute( 'data_type_string' ) . ')</small>';
-                echo '</td><td><small>';
-                print_r( $a->metadata() );
-                echo '</small></td><td>';
-                echo '<small><em>(not searchable)</em></small>';
-                echo '</td>';
-                echo '</tr>';
-            }
-        }
-        echo '</table>';
-        
-        $result = $searchEngine->addObject( $object, true );
-        echo '<h2>Index result: ' . print_r( $result, 1 ) . '</h2>';
-        
-        echo '<h3>Xml sent to engine:</h3>';
-        $xml = fakeAddObject( $object );
-        foreach ( $xml as $doc )
-        {
-            if ( is_object( $doc ) )
-            {
-                if ( is_object( $doc->Doc ) )
-                {
-                    $doc->Doc->formatOutput = true;
-                    echo '<pre style="border: 1px solid rgb(204, 204, 204); background: none repeat scroll 0% 0% rgb(238, 238, 238); border-radius: 5px 5px 5px 5px; padding: 10px;">' . htmlentities( $doc->Doc->saveXML( $doc->RootElement ) ) . '</pre>';
-                }
-                else
-                {
-                    $dom = new DOMDocument;
-                    $dom->preserveWhiteSpace = FALSE;
-                    $dom->loadXML( $doc->docToXML() );
-                    $dom->formatOutput = TRUE;
-                    echo '<pre style="border: 1px solid rgb(204, 204, 204); background: none repeat scroll 0% 0% rgb(238, 238, 238); border-radius: 5px 5px 5px 5px; padding: 10px;">' . htmlentities( $dom->saveXML( $dom->documentElement ) ) . '</pre>';
-                }
-            }
-        }
-        
-        
-    }
-    else
-    {
-        echo 'Non esiste oggetto con ID #' . $ObjectID;
-    }
-}
-*/
-
-
 function fakeAddObject( $contentObject )
 {
     $eZSolr = new eZSolr();
@@ -212,7 +120,7 @@ function fakeAddObject( $contentObject )
     $excludeClasses = $eZSolr->FindINI->variable( 'IndexExclude', 'ClassIdentifierList' );
     if ( $excludeClasses && in_array( $contentObject->attribute( 'class_identifier' ), $excludeClasses ) )
     {
-        return true;
+        return false;
     }
     // Get global object values
     $mainNode = $contentObject->attribute( 'main_node' );
