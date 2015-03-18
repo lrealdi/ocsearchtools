@@ -257,6 +257,10 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                 foreach ( $fieldNameArray as $fieldNameValue )
                 {
                     //eZCLI::instance()->output(var_dump($metaData));
+                    if ( is_array( $finalValue ) )
+                    {
+                        $finalValue = self::recursive_implode( $finalValue );
+                    }
                     $finalValue = trim( $finalValue, "\t\r\n " );
                     if ( !empty( $finalValue ) )
                     {
@@ -286,6 +290,39 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
             }
         }
         return $metaData;
+    }
+    
+    /**
+    * @see https://gist.github.com/jimmygle/2564610
+    * Recursively implodes an array with optional key inclusion
+    *
+    * Example of $include_keys output: key, value, key, value, key, value
+    *
+    * @access public
+    * @param array $array multi-dimensional array to recursively implode
+    * @param string $glue value that glues elements together
+    * @param bool $include_keys include keys before their values
+    * @param bool $trim_all trim ALL whitespace from string
+    * @return string imploded array
+    */
+    protected static function recursive_implode( array $array, $glue = ',', $include_keys = false, $trim_all = true )
+    {
+        $glued_string = '';
+         
+        // Recursively iterates array and adds key/value to glued string
+        array_walk_recursive( $array, function($value, $key) use ($glue, $include_keys, &$glued_string )
+        {
+            $include_keys and $glued_string .= $key.$glue;
+            $glued_string .= $value.$glue;
+        });
+         
+        // Removes last $glue from string
+        strlen($glue) > 0 and $glued_string = substr($glued_string, 0, -strlen($glue));
+         
+        // Trim ALL whitespace
+        $trim_all and $glued_string = preg_replace("/(\s)/ixsm", '', $glued_string);
+         
+        return (string) $glued_string;
     }
 
     /**
@@ -348,6 +385,49 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                             $returnArray[$submetaFieldName] = array( ezfSolrDocumentFieldBase::preProcessValue( $metaInfo['value'], $metaInfo['fieldType'] ) );
                         }
                     }
+                    
+                    $nodeAttributeValues = array();
+                    $nodePathArray = array();
+                    foreach ( $subObject->attribute( 'contentobject' )->attribute( 'assigned_nodes' ) as $contentNode )
+                    {
+                        foreach ( eZSolr::nodeAttributes() as $attributeName => $fieldType )
+                        {
+                            $nodeAttributeValues[] = array( 'name' => $attributeName,
+                                                            'value' => $contentNode->attribute( $attributeName ),
+                                                            'fieldType' => $fieldType );
+                        }
+                        $nodePathArray[] = $contentNode->attribute( 'path_array' );            
+                    }
+                    //@todo questo non va... occorre correggere schema.xml?
+                    //foreach ( $nodeAttributeValues as $metaInfo )
+                    //{
+                    //    $submetaFieldName = ezfSolrDocumentFieldBase::generateSubmetaFieldName( $metaInfo['name'], $contentClassAttribute );
+                    //    if ( isset( $returnArray[$submetaFieldName] ) )
+                    //    {
+                    //        $returnArray[$submetaFieldName] = array_merge( $returnArray[$submetaFieldName],
+                    //                                                       array( ezfSolrDocumentFieldBase::preProcessValue( $metaInfo['value'], $metaInfo['fieldType'] ) ) );
+                    //    }
+                    //    else
+                    //    {
+                    //        $returnArray[$submetaFieldName] = array( ezfSolrDocumentFieldBase::preProcessValue( $metaInfo['value'], $metaInfo['fieldType'] ) );
+                    //    }                        
+                    //}                    
+                    foreach ( $nodePathArray as $pathArray )
+                    {
+                        $submetaFieldName = ezfSolrDocumentFieldBase::generateSubmetaFieldName( 'path', $contentClassAttribute );
+                        foreach ( $pathArray as $pathNodeID)
+                        {                            
+                            if ( isset( $returnArray[$submetaFieldName] ) )
+                            {
+                                $returnArray[$submetaFieldName] = array_merge( $returnArray[$submetaFieldName], array( $pathNodeID ) );
+                            }
+                            else
+                            {
+                                $returnArray[$submetaFieldName] = array( $pathNodeID );
+                            }  
+                        }
+                    }
+                    
                 }
                 
                 $contentClassAttribute = $this->ContentObjectAttribute->attribute( 'contentclass_attribute' );
