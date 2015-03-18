@@ -26,7 +26,13 @@ $redirect = rtrim( $redirect, '/' );
 foreach( $parameters as $key => $value )
 {
     if ( $key != '' && $value != '' )
+    {
+        if ( is_array( $value ) )
+        {
+            $value = implode( '::', $value );
+        }
         $redirect .= "/({$key})/{$value}";
+    }
 }
 $module->redirectTo( $redirect . $redirectSuffix );
 

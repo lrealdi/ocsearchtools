@@ -92,7 +92,7 @@ class OCFacetNavgationHelper
     
     public function getNavigation()
     {        
-        $this->data['navigation'] = $this->fetchFacetNavigation();
+        $this->data['navigation'] = $this->fetchFacetNavigation();    
     }
     
     public function getContents()
@@ -112,7 +112,7 @@ class OCFacetNavgationHelper
     {
         $self = new self( $fetchParams, $userParameters, $baseUri, $query );
         $self->getNavigation();
-        $self->getContents();
+        $self->getContents();        
         return $self->data;
     }
     
@@ -157,10 +157,28 @@ class OCFacetNavgationHelper
             {
                 if ( self::decodeKey( $key ) == $names['name'] )
                 {                                        
-                    $params[self::decodeKey( $key )] = self::decodeValue( $value );
-                    $this->queryUri[self::encodeKey( $key )] = self::encodeValue( $value );
-                    $filterValue = addcslashes( $value, '"' );
-                    $this->fetchParameters['Filter'][] = "{$names['field']}:\"{$filterValue}\"";
+                    $values = explode( '::', $value );                    
+                    $filterValue = array();
+                    foreach( $values as $val )
+                    {
+                        $params[self::decodeKey( $key )] = self::decodeValue( $val );
+                        $this->queryUri[self::encodeKey( $key )][] = self::encodeValue( $val );
+                        $filterValue[] = addcslashes( $val, '"' );                        
+                    }
+                    if ( count( $filterValue ) > 1 )
+                    {
+                        $multiFilter = array( 'or' );
+                        foreach( $filterValue as $val )
+                        {
+                            $multiFilter[] = "{$names['field']}:\"{$val}\"";
+                        }
+                        $this->fetchParameters['Filter'][] = $multiFilter;
+                    }
+                    elseif ( count( $filterValue ) == 1 )
+                    {
+                        $filterValue = $filterValue[0];
+                        $this->fetchParameters['Filter'][] = "{$names['field']}:\"{$filterValue}\"";
+                    }                    
                 }
             }
             
@@ -211,9 +229,22 @@ class OCFacetNavgationHelper
     
     protected static function removeFromQueryUri( $queryUri, $key, $value, $baseUrl )
     {
-        if ( isset( $queryUri[$key] ) && $queryUri[$key] == $value )
+        if ( isset( $queryUri[$key] ) )
         {
-            unset( $queryUri[$key] );
+            if ( is_array( $queryUri[$key] ) )
+            {
+                foreach( $queryUri[$key] as $index => $val )
+                {
+                    if ( $value == $val )
+                    {
+                        unset( $queryUri[$key][$index] );
+                    }
+                }
+            }
+            elseif ( $queryUri[$key] == $value )
+            {
+                unset( $queryUri[$key] );
+            }
         }
         return self::getUriString( $queryUri, $baseUrl );
     }
@@ -224,6 +255,10 @@ class OCFacetNavgationHelper
         {            
             if ( !empty( $value ) )
             {
+                if ( is_array( $value ) )
+                {
+                    $value = implode( '::', $value );
+                }
                 $baseUrl .= "/($key)/$value";
             }
         }
@@ -244,9 +279,8 @@ class OCFacetNavgationHelper
                 }
             }
         }
-
         foreach( $facets as $key => $names )
-        {            
+        {                        
             $navigation[$names['name']] = array();
             foreach( $facetFields[$key]['queryLimit'] as $term => $query )
             {
@@ -266,7 +300,10 @@ class OCFacetNavgationHelper
                 $nameEncoded = self::encodeKey( $names['name'] );
                 $termEncoded = self::encodeValue( $term );
 
-                if ( isset( $queryUrl[$nameEncoded] ) && $queryUrl[$nameEncoded] == $termEncoded )
+                if ( isset( $queryUrl[$nameEncoded] )
+                    && ( ( is_array( $queryUrl[$nameEncoded] ) && in_array( $termEncoded, $queryUrl[$nameEncoded] ) )
+                         || ( is_string( $queryUrl[$nameEncoded] ) && $queryUrl[$nameEncoded] == $termEncoded ) )
+                   )
                 {
                     $navigationValues['active'] = true;
                     $navigationValues['url'] = self::removeFromQueryUri( $queryUrl, $nameEncoded, $termEncoded, $baseUrl );
