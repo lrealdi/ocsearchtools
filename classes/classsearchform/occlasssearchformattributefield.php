@@ -56,10 +56,10 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
                     ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name' . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
                     'string' );
                 
-            }
+            }            
             else
             {            
-                $field = ezfSolrDocumentFieldBase::generateAttributeFieldName( $this->contentClassAttribute, 'string' );
+                $field = ezfSolrDocumentFieldBase::generateAttributeFieldName( $this->contentClassAttribute, ezfSolrDocumentFieldBase::getClassAttributeType( $this->contentClassAttribute, null, 'search' ) );
             }
             
             $facets = array( 'field' => $field, 'name'=> $this->attributes['name'], 'limit' => 300, 'sort' => 'alpha' );
