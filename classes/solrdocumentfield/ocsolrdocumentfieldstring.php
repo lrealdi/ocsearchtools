@@ -47,7 +47,7 @@ class ocSolrDocumentFieldString extends ezfSolrDocumentFieldBase
         }
         $fieldNameArray = array_unique( $fieldNameArray );
 
-        $metaData = $this->ContentObjectAttribute->metaData();
+        $metaData = trim( $this->ContentObjectAttribute->metaData() );
         $processedMetaDataArray = array();
         $processedMetaDataArray[] = $this->preProcessValue( $metaData,
                                                             self::getClassAttributeType( $contentClassAttribute ) );
