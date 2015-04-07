@@ -139,7 +139,9 @@ class OCClassSearchFormFetcher
             }
             elseif ( $key == 'query' )
             {
-                $this->searchText = $value;
+                $queryField = new OCClassSearchFormQueryField();
+                $queryField->buildFetch( $this, $value );
+                $this->searchText = $queryField->queryText();
                 $this->isFetch = true;
             }                        
         }

@@ -330,11 +330,17 @@ class OCFacetNavgationHelper
                     if ( empty( $term ) ) continue;
                     $navigation[$names['name']][$term]['count'] = 0;
                 }
-                foreach( $facetFieldsForCount[$key]['countList'] as $term => $count )
-                {                
-                    if ( empty( $term ) ) continue;
-                    $navigation[$names['name']][$term]['count'] = $count;                                        
-                }                
+                if ( isset( $facetFieldsForCount[$key]['countList'] ) )
+                {
+                    foreach ( $facetFieldsForCount[$key]['countList'] as $term => $count )
+                    {
+                        if ( empty( $term ) )
+                        {
+                            continue;
+                        }
+                        $navigation[$names['name']][$term]['count'] = $count;
+                    }
+                }
             }
             else
             {
