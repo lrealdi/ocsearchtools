@@ -181,15 +181,15 @@ class OCClassSearchFormHelper
             break;
         
             case 'query_field':
-                return new OCClassSearchFormQueryField( $this );
+                return new OCClassSearchFormQueryField();
             break;
         
             case 'sort_field':
-                return new OCClassSearchFormSortField( $this );
+                return new OCClassSearchFormSortField();
             break;
         
             case 'published_field':
-                return new OCClassSearchFormPublishedField( $this );
+                return new OCClassSearchFormPublishedField();
             break;
         
             case 'class':
