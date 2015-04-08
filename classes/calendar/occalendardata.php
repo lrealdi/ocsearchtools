@@ -272,7 +272,7 @@ class OCCalendarData
             'SearchResultClustering' => null,
             'ExtendedAttributeFilter' => array()
         );        
-        $solrSearch = new eZSolr();
+        $solrSearch = new OCSolr();
         $solrResult = $solrSearch->search( $this->parameters['query'], $solrFetchParams );
         
         //eZDebug::writeNotice( $this->filters, __METHOD__ );
