@@ -200,7 +200,7 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
             }
             elseif ( $content instanceof eZContentObject )
             {
-                $metaDataArray[] = $object->name( false, $contentObjectAttribute->attribute( 'language_code' ) );
+                $metaDataArray[] = $content->name( false, $contentObjectAttribute->attribute( 'language_code' ) );
             }
             
         }
