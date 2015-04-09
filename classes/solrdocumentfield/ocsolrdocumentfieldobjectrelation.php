@@ -183,17 +183,24 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
             $metaDataArray = array();
             $content = $contentObjectAttribute->content();
             $language = $contentObjectAttribute->attribute( 'language_code' );
-            foreach( $content['relation_list'] as $relationItem )
+            if ( is_array( $content ) )
             {
-                $subObjectID = $relationItem['contentobject_id'];
-                if ( !$subObjectID )
-                    continue;
-                
-                $object = eZContentObject::fetch( $subObjectID );
-                if ( $object instanceof eZContentObject )
+                foreach( $content['relation_list'] as $relationItem )
                 {
-                    $metaDataArray[] = $object->name( false, $contentObjectAttribute->attribute( 'language_code' ) );
+                    $subObjectID = $relationItem['contentobject_id'];
+                    if ( !$subObjectID )
+                        continue;
+                    
+                    $object = eZContentObject::fetch( $subObjectID );
+                    if ( $object instanceof eZContentObject )
+                    {
+                        $metaDataArray[] = $object->name( false, $contentObjectAttribute->attribute( 'language_code' ) );
+                    }
                 }
+            }
+            elseif ( $content instanceof eZContentObject )
+            {
+                $metaDataArray[] = $object->name( false, $contentObjectAttribute->attribute( 'language_code' ) );
             }
             
         }

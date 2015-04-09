@@ -84,7 +84,7 @@ body { font-size: 100%; font-family: 'Lucida Grande', Verdana, Arial, Sans-Serif
         <div id="xml-{$i}">
           <p>
             {foreach $xml as $index => $icsemmelle}
-              {if $i|eq($index)>}
+              {if $i|eq($index)}
                 <strong>Document {$index|inc()}</strong>
               {else}
                 <a href="#xml-{$index}">Document {$index|inc()}</a>
