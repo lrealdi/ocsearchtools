@@ -2,6 +2,8 @@
 
 class OCClassSearchFormAttributeField extends OCClassSearchFormField
 {
+    private static $fieldHandlers;
+    
     const NAME_PREFIX = 'attribute';
     
     protected static $_instances = array();
@@ -29,9 +31,23 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
      */
     public static function instance( eZContentClassAttribute $attribute )
     {
+        if ( self::$fieldHandlers === null )
+        {
+            self::$fieldHandlers = array();
+            if ( eZINI::instance( 'ocsearchtools.ini' )->hasVariable( 'ClassSearchFormHandlers', 'AttributeHandlers' ) )
+                self::$fieldHandlers = eZINI::instance( 'ocsearchtools.ini' )->variable( 'ClassSearchFormHandlers', 'AttributeHandlers' );
+        }
         if ( !isset( self::$_instances[$attribute->attribute( 'id' )] ) )
         {
-            self::$_instances[$attribute->attribute( 'id' )] = new OCClassSearchFormAttributeField( $attribute );
+            if ( isset( self::$fieldHandlers[$attribute->attribute( 'data_type_string' )] ) && class_exists( self::$fieldHandlers[$attribute->attribute( 'data_type_string' )] ) )
+            {
+                $className = self::$fieldHandlers[$attribute->attribute( 'data_type_string' )];                
+            }
+            else
+            {
+                $className = 'OCClassSearchFormAttributeField';
+            }
+            self::$_instances[$attribute->attribute( 'id' )] = new $className( $attribute );
         }
         return self::$_instances[$attribute->attribute( 'id' )];
     }
@@ -98,46 +114,87 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
                     }
                 }
             }            
-        }
+        }        
         return $this->values;
     }
 
     public function buildFetch( OCClassSearchFormFetcher $fetcher, $requestKey, $requestValue, &$filters )
     {
+        if ( is_array( $requestValue ) && count( $requestValue ) == 1 )
+        {
+            $requestValue = array_shift( $requestValue );
+        }
+        
         if ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
         {
             //@todo errore nella definzione del nome del sottoattributo? verifaicare vedi anceh in self::getValues
             //$fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, 'name', 'search' );
             $fieldName = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
                     ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name' . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
-                    'string' );
-            $addQuote = true;
+                    'string' );            
+            if ( is_array( $requestValue ) )
+            {
+                $values = array( 'or' );
+                foreach( $requestValue as $v )
+                {
+                    $values[] = $fieldName . ':' . $fetcher->encode( $v, true );
+                }
+                $filters[] = $values;
+            }
+            else
+            {            
+                $filters[] = $fieldName . ':' . $fetcher->encode( $requestValue, true );
+            }
+        }
+        elseif ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezdate' || $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezdatetime' )
+        {
+            $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
+            if ( is_array( $requestValue ) )
+            {
+                $values = array( 'or' );
+                foreach( $requestValue as $v )
+                {
+                    $startDateTime = DateTime::createFromFormat( OCCalendarData::PICKER_DATE_FORMAT, $v , OCCalendarData::timezone() );
+                    if ( $startDateTime instanceof DateTime )
+                    {                        
+                        $startDateTime->setTime( 00, 00 );
+                        $endDateTime = clone $startDateTime;
+                        $endDateTime->setTime( 23, 59 );
+                        $values[] = $fieldName . ':[ ' . ezfSolrDocumentFieldBase::preProcessValue( $startDateTime->getTimestamp(), 'date' ) . ' TO ' . ezfSolrDocumentFieldBase::preProcessValue( $endDateTime->getTimestamp(), 'date' ) . ' ]';
+                    }
+                }
+                $filters[] = $values;
+            }
+            else
+            {                            
+                $startDateTime = DateTime::createFromFormat( OCCalendarData::PICKER_DATE_FORMAT, $requestValue , OCCalendarData::timezone() );                
+                if ( $startDateTime instanceof DateTime )
+                {
+                    $startDateTime->setTime( 00, 00 );
+                    $endDateTime = clone $startDateTime;
+                    $endDateTime->setTime( 23, 59 );
+                    $filters[] = $fieldName . ':[' . ezfSolrDocumentFieldBase::preProcessValue( $startDateTime->getTimestamp(), 'date' ) . ' TO ' . ezfSolrDocumentFieldBase::preProcessValue( $endDateTime->getTimestamp(), 'date' ) . ']';
+                }
+            }
         }
         else
         {
             $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
-            $addQuote = false;
-        }
-        
-        if ( is_array( $requestValue ) && count( $requestValue ) == 1 )
-        {
-            $requestValue = array_shift( $requestValue );
-        }
-        
-        if ( is_array( $requestValue ) )
-        {
-            $values = array( 'or' );
-            foreach( $requestValue as $v )
+            if ( is_array( $requestValue ) )
             {
-                $values[] = $fieldName . ':' . $fetcher->encode( $v, $addQuote );
+                $values = array( 'or' );
+                foreach( $requestValue as $v )
+                {
+                    $values[] = $fieldName . ':' . $fetcher->encode( $v, false );
+                }
+                $filters[] = $values;
             }
-            $filters[] = $values;
+            else
+            {            
+                $filters[] = $fieldName . ':' . $fetcher->encode( $requestValue, false );
+            }
         }
-        else
-        {            
-            $filters[] = $fieldName . ':' . $fetcher->encode( $requestValue, $addQuote );
-        }
-
+        
         $fetcher->addFetchField( array(
             'name' => $this->contentClassAttribute->attribute( 'name' ),
             'value' => $requestValue,
