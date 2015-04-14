@@ -1,6 +1,5 @@
 {run-once}
 {ezscript_require( array( 'ezjsc::jquery', 'ezjsc::jqueryUI' ) )}
-{ezcss_require( array('datepicker.css') )}
 <script type="text/javascript">
 {literal}
 $(function() {	

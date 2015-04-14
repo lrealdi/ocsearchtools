@@ -189,7 +189,7 @@ class OCClassSearchFormHelper
             break;
         
             case 'published_field':
-                return new OCClassSearchFormPublishedField();
+                return new OCClassSearchFormPublishedField( $this->contentClass->attribute( 'id' ) );
             break;
         
             case 'class':

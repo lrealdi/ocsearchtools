@@ -114,9 +114,9 @@ class OCClassSearchFormFetcher
                 $contentClassAttribute = eZContentClassAttribute::fetch( $contentClassAttributeID );
                 if ( $contentClassAttribute instanceof eZContentClassAttribute )
                 {
-                    $field = OCClassSearchFormAttributeField::instance( $contentClassAttribute );
-                    $this->isFetch = true;
+                    $field = OCClassSearchFormAttributeField::instance( $contentClassAttribute );                    
                     $field->buildFetch( $this, $key, $value, $filters );
+                    $this->isFetch = true;
                 }
             }
             elseif ( in_array( $key, OCFacetNavgationHelper::$allowedUserParamters ) )
@@ -137,6 +137,12 @@ class OCClassSearchFormFetcher
                 ) );
                 $this->isFetch = true;
             }
+            elseif ( $key == 'publish_date' )
+            {
+                $publishedField = new OCClassSearchFormPublishedField( $this->requestFields['class_id'] );
+                $publishedField->buildFetch( $this, $value, $filters );                
+                $this->isFetch = true;
+            }   
             elseif ( $key == 'query' )
             {
                 $queryField = new OCClassSearchFormQueryField();
@@ -161,7 +167,7 @@ class OCClassSearchFormFetcher
         {
             if ( $this->isFetch() )
             {
-                $params = OCFacetNavgationHelper::map( $this->baseParameters );                
+                $params = OCFacetNavgationHelper::map( $this->baseParameters );
                 self::$_result = OCFacetNavgationHelper::fetch( $params, $this->searchText );
             }
             else
