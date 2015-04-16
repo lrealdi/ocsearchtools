@@ -57,28 +57,10 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
         if ( $this->values === null )
         {
             $this->values = array();
-            if ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
-            {
-                //@todo filter per parent_node
-                //$classContent = $this->contentClassAttribute->content();
-                //$filters = isset( $classContent['default_placement']['node_id'] ) ?  array( $classContent['default_placement']['node_id'] ) : array( 1 );
-                
-                //@todo errore nella definzione del nome del sottoattributo? verifaicare vedi anche in self::buildFetch
-                //$field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
-                //    ezfSolrDocumentFieldBase::SUBMETA_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name',
-                //    'string');
-                
-                $field = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
-                    ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name' . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
-                    'string' );
-                
-            }            
-            else
-            {            
-                $field = ezfSolrDocumentFieldBase::generateAttributeFieldName( $this->contentClassAttribute, ezfSolrDocumentFieldBase::getClassAttributeType( $this->contentClassAttribute, null, 'search' ) );
-            }
             
-            $facets = array( 'field' => $field, 'name'=> $this->attributes['name'], 'limit' => 300, 'sort' => 'alpha' );
+            $field = ezfSolrDocumentFieldBase::generateAttributeFieldName( $this->contentClassAttribute, ezfSolrDocumentFieldBase::getClassAttributeType( $this->contentClassAttribute, null, 'search' ) );
+            
+            $facets = array( 'field' => $field, 'name'=> $this->attributes['name'], 'limit' => 500, 'sort' => 'alpha' );
 
             $currentParameters = $baseParameters = array_merge(
                 OCClassSearchFormHelper::result()->getBaseParameters(),
@@ -128,74 +110,19 @@ class OCClassSearchFormAttributeField extends OCClassSearchFormField
             $requestValue = array_shift( $requestValue );
         }
         
-        if ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezobjectrelationlist' )
+        $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
+        if ( is_array( $requestValue ) )
         {
-            //@todo errore nella definzione del nome del sottoattributo? verifaicare vedi anceh in self::getValues
-            //$fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, 'name', 'search' );
-            $fieldName = ezfSolrDocumentFieldBase::$DocumentFieldName->lookupSchemaName(
-                    ezfSolrDocumentFieldBase::SUBATTR_FIELD_PREFIX . $this->contentClassAttribute->attribute( 'identifier' ) . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR . 'name' . ezfSolrDocumentFieldBase::SUBATTR_FIELD_SEPARATOR,
-                    'string' );            
-            if ( is_array( $requestValue ) )
+            $values = array( 'or' );
+            foreach( $requestValue as $v )
             {
-                $values = array( 'or' );
-                foreach( $requestValue as $v )
-                {
-                    $values[] = $fieldName . ':' . $fetcher->encode( $v, true );
-                }
-                $filters[] = $values;
+                $values[] = $fieldName . ':' . $fetcher->encode( $v, true );
             }
-            else
-            {            
-                $filters[] = $fieldName . ':' . $fetcher->encode( $requestValue, true );
-            }
-        }
-        elseif ( $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezdate' || $this->contentClassAttribute->attribute( 'data_type_string' ) == 'ezdatetime' )
-        {
-            $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
-            if ( is_array( $requestValue ) )
-            {
-                $values = array( 'or' );
-                foreach( $requestValue as $v )
-                {
-                    $startDateTime = DateTime::createFromFormat( OCCalendarData::PICKER_DATE_FORMAT, $v , OCCalendarData::timezone() );
-                    if ( $startDateTime instanceof DateTime )
-                    {                        
-                        $startDateTime->setTime( 00, 00 );
-                        $endDateTime = clone $startDateTime;
-                        $endDateTime->setTime( 23, 59 );
-                        $values[] = $fieldName . ':[ ' . ezfSolrDocumentFieldBase::preProcessValue( $startDateTime->getTimestamp(), 'date' ) . ' TO ' . ezfSolrDocumentFieldBase::preProcessValue( $endDateTime->getTimestamp(), 'date' ) . ' ]';
-                    }
-                }
-                $filters[] = $values;
-            }
-            else
-            {                            
-                $startDateTime = DateTime::createFromFormat( OCCalendarData::PICKER_DATE_FORMAT, $requestValue , OCCalendarData::timezone() );                
-                if ( $startDateTime instanceof DateTime )
-                {
-                    $startDateTime->setTime( 00, 00 );
-                    $endDateTime = clone $startDateTime;
-                    $endDateTime->setTime( 23, 59 );
-                    $filters[] = $fieldName . ':[' . ezfSolrDocumentFieldBase::preProcessValue( $startDateTime->getTimestamp(), 'date' ) . ' TO ' . ezfSolrDocumentFieldBase::preProcessValue( $endDateTime->getTimestamp(), 'date' ) . ']';
-                }
-            }
+            $filters[] = $values;
         }
         else
-        {
-            $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
-            if ( is_array( $requestValue ) )
-            {
-                $values = array( 'or' );
-                foreach( $requestValue as $v )
-                {
-                    $values[] = $fieldName . ':' . $fetcher->encode( $v, false );
-                }
-                $filters[] = $values;
-            }
-            else
-            {            
-                $filters[] = $fieldName . ':' . $fetcher->encode( $requestValue, false );
-            }
+        {            
+            $filters[] = $fieldName . ':' . $fetcher->encode( $requestValue, true );
         }
         
         $fetcher->addFetchField( array(
