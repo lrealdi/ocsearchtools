@@ -1,4 +1,4 @@
-{include uri = 'design:class_search_form/form_fields/date_range.tpl'
+{include uri = 'design:class_search_form/form_fields/date_slider.tpl'
 		 label = $input.label
 		 placeholder = $input.label
 		 value = $input.value
