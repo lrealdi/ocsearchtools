@@ -2,56 +2,165 @@
 
 class OCClassSearchFormAttributeDate extends OCClassSearchFormAttributeField
 {
-    public function buildFetch( OCClassSearchFormFetcher $fetcher, $requestKey, $requestValue, &$filters )
+    protected function __construct( eZContentClassAttribute $attribute )
     {
-        if ( is_array( $requestValue ) && count( $requestValue ) == 1 )
+        parent::__construct( $attribute );
+        $this->functionAttributes['bounds'] = 'getBounds';
+        $this->functionAttributes['current_bounds'] = 'getCurrentBounds';
+    }
+
+    protected function getBounds()
+    {
+        $startTimestamp = $endTimestamp = 0;
+        $sortField = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'sort' );
+        $params = array_merge(
+            OCFacetNavgationHelper::map( OCClassSearchFormHelper::result()->getBaseParameters() ),
+            array(
+                'SearchContentClassID' => $this->contentClassAttribute->attribute( 'contentclass_id' ),
+                'SearchLimit' => 1,
+                'SortBy' => array( $sortField => 'asc' )
+            )
+        );
+        $startSearch = OCFacetNavgationHelper::fetch( $params, OCClassSearchFormHelper::result()->searchText );
+        /** @var $startSearchResults eZFindResultNode[] */
+        $startSearchResults = $startSearch['SearchResult'];
+        if ( isset( $startSearchResults[0] ) )
         {
-            $requestValue = array_shift( $requestValue );            
+            $startTimestamp = $startSearchResults[0]->attribute( 'object' )->attribute( 'published' );
         }
-        
-        $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
-        if ( is_array( $requestValue ) )
+        $params['SortBy'] = array( $sortField => 'desc' );
+        $endSearch = OCFacetNavgationHelper::fetch( $params, OCClassSearchFormHelper::result()->searchText );
+        /** @var $endSearchResults eZFindResultNode[] */
+        $endSearchResults = $endSearch['SearchResult'];
+        if ( isset( $endSearchResults[0] ) )
         {
-            $values = array( 'or' );
-            foreach( $requestValue as $v )
-            {
-                $range = $this->getRangeFromValue( $v );
-                if ( $range !== null )
-                {                
-                    $values[] = $fieldName . ':[' . ezfSolrDocumentFieldBase::preProcessValue( $range->startDateTime->getTimestamp(), 'date' ) . ' TO ' . ezfSolrDocumentFieldBase::preProcessValue( $range->endDateTime->getTimestamp(), 'date' ) . ']';
-                }                
-            }
-            $filters[] = $values;
+            $endTimestamp = $endSearchResults[0]->attribute( 'object' )->attribute( 'published' );
+        }
+
+        $data = new OCClassSearchFormDateFieldBounds();
+        $data->setStartTimestamp( $startTimestamp );
+        $data->setEndTimestamp( $endTimestamp );
+        return $data;
+    }
+
+    protected function getCurrentBounds()
+    {
+        if ( $this->attribute( 'value' ) )
+        {
+            $data = OCClassSearchFormDateFieldBounds::fromString( $this->attribute( 'value' ) );
         }
         else
-        {                            
-            $range = $this->getRangeFromValue( $requestValue );
-            if ( $range !== null )
-            {                
-                $filters[] = $fieldName . ':[' . ezfSolrDocumentFieldBase::preProcessValue( $range->startDateTime->getTimestamp(), 'date' ) . ' TO ' . ezfSolrDocumentFieldBase::preProcessValue( $range->endDateTime->getTimestamp(), 'date' ) . ']';
-            }
-        }
-    
-        $fetcher->addFetchField( array(
-            'name' => $this->contentClassAttribute->attribute( 'name' ),
-            'value' => $requestValue,
-            'remove_view_parameters' => $fetcher->getViewParametersString( array( $requestKey ) )
-        ));
-    }
-    
-    protected function getRangeFromValue( $requestValue )
-    {
-        $return = null;
-        $startDateTime = DateTime::createFromFormat( OCCalendarData::PICKER_DATE_FORMAT, $requestValue , OCCalendarData::timezone() );                
-        if ( $startDateTime instanceof DateTime )
         {
-            $startDateTime->setTime( 00, 00 );
-            $endDateTime = clone $startDateTime;
-            $endDateTime->setTime( 23, 59 );
-            $return = new stdClass();
-            $return->startDateTime = $startDateTime;
-            $return->endDateTime = $endDateTime;
+            $data = $this->getBounds();
         }
-        return $return;
+        return $data;
+    }
+
+    public function buildFetch( OCClassSearchFormFetcher $fetcher, $requestKey, $requestValue, &$filters )
+    {
+        $fieldName = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'search' );
+        $bounds = OCClassSearchFormDateFieldBounds::fromString( $requestValue );
+        $filters[] = $fieldName  . ':[' . $bounds->attribute( 'start_solr' ) . ' TO ' . $bounds->attribute( 'end_solr' ) . ']';
+        $fetcher->addFetchField( array(
+                'name' => $this->attributes['label'],
+                'value' => $bounds->humanString(),
+                'remove_view_parameters' => $fetcher->getViewParametersString( array( $requestKey ) )
+            ));
+    }
+}
+
+class OCClassSearchFormDateFieldBounds
+{
+    const STRING_SEPARATOR = '-';
+
+    protected $start;
+    protected $end;
+
+    public function __construct()
+    {
+        $this->start = new DateTime();
+        $this->end = new DateTime();
+    }
+
+    public function attributes()
+    {
+        return array(
+            'start_timestamp',
+            'start_js',
+            'start_solr',
+            'end_timestamp',
+            'end_js',
+            'end_solr'
+        );
+    }
+
+    public function attribute( $key )
+    {
+        switch( $key )
+        {
+            case 'start_timestamp':
+                return $this->start->format( 'U' );
+                break;
+            case 'start_js':
+                return $this->start->format( 'U' ) * 1000;
+                break;
+            case 'start_solr':
+                return ezfSolrDocumentFieldBase::preProcessValue( $this->start->format( 'U' ), 'date' );
+                break;
+            case 'end_timestamp':
+                return $this->end->format( 'U' );
+                break;
+            case 'end_js':
+                return $this->end->format( 'U' ) * 1000;
+                break;
+            case 'end_solr':
+                return ezfSolrDocumentFieldBase::preProcessValue( $this->end->format( 'U' ), 'date' );
+                break;
+            default: return false;
+        }
+    }
+
+    public function hasAttribute( $key )
+    {
+        return in_array( $key, $this->attributes() );
+    }
+
+    public static function fromString( $string )
+    {
+        $data = new OCClassSearchFormDateFieldBounds();
+        $values = explode( self::STRING_SEPARATOR, $string );
+        if ( count( $values ) == 2 )
+        {
+            $data->setStartTimestamp( $values[0] );
+            $data->setEndTimestamp( $values[1] );
+        }
+        else
+        {
+            $data->setStartTimestamp( $values[0] );
+            $data->setEndTimestamp( $values[0] );
+        }
+        return $data;
+    }
+
+    public function setStartTimestamp( $timestamp )
+    {
+        $this->start->setTimestamp( $timestamp );
+        $this->start->setTime( 00, 00 );
+    }
+
+    public function setEndTimestamp( $timestamp )
+    {
+        $this->end->setTimestamp( $timestamp );
+        $this->end->setTime( 23, 59 );
+    }
+
+    public function humanString()
+    {
+        return $this->start->format( OCCalendarData::PICKER_DATE_FORMAT ) . ' → ' . $this->end->format( OCCalendarData::PICKER_DATE_FORMAT );
+    }
+
+    public function __toString()
+    {
+        return $this->start->format( 'U' ) . self::STRING_SEPARATOR . $this->end->format( 'U' );
     }
 }

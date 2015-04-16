@@ -424,6 +424,10 @@ class OCFacetNavgationHelper
             {
                 $params[self::$mapper[$key]] = $value;
             }
+            elseif( in_array( $key, self::$mapper ) )
+            {
+                $params[$key] = $value;
+            }
         }
         return $params;
     }
@@ -443,7 +447,13 @@ class OCFacetNavgationHelper
             'count' => $search['SearchCount']
         );
     }
-    
+
+    /**
+     * @param array $parameters
+     * @param string $query
+     *
+     * @return array
+     */
     public static function fetch( $parameters, $query = '' )
     {
         $solrFetchParams = array(
