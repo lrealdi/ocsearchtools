@@ -62,7 +62,7 @@ class OCClassSearchFormAttributeDate extends OCClassSearchFormAttributeField
         $bounds = OCClassSearchFormDateFieldBounds::fromString( $requestValue );
         $filters[] = $fieldName  . ':[' . $bounds->attribute( 'start_solr' ) . ' TO ' . $bounds->attribute( 'end_solr' ) . ']';
         $fetcher->addFetchField( array(
-                'name' => $this->attributes['label'],
+                'name' => $this->contentClassAttribute->attribute( 'name' ),
                 'value' => $bounds->humanString(),
                 'remove_view_parameters' => $fetcher->getViewParametersString( array( $requestKey ) )
             ));
