@@ -55,12 +55,12 @@ class OCClassSearchFormHelper
     public static function displayForm( $classIdentifier, $parameters )
     {
         $instance = self::instance( $classIdentifier );        
-        $keyArray = array( array( 'class', $instance->contentClass->attribute( 'id' ) ),
-                           array( 'class_identifier', $instance->contentClass->attribute( 'identifier' ) ),                           
-                           array( 'class_group', $instance->contentClass->attribute( 'match_ingroup_id_list' ) ) );
+        $keyArray = array( array( 'class', $instance->getContentClass()->attribute( 'id' ) ),
+                           array( 'class_identifier', $instance->getContentClass()->attribute( 'identifier' ) ),
+                           array( 'class_group', $instance->getContentClass()->attribute( 'match_ingroup_id_list' ) ) );
         
         $tpl = eZTemplate::factory();
-        $tpl->setVariable( 'class', $instance->contentClass );
+        $tpl->setVariable( 'class', $instance->getContentClass() );
         $tpl->setVariable( 'helper', $instance );
         $tpl->setVariable( 'parameters', $parameters );
 
@@ -81,14 +81,14 @@ class OCClassSearchFormHelper
      */
     public static function displayAttribute( OCClassSearchFormHelper $instance, OCClassSearchFormAttributeField $field )
     {
-        $keyArray = array( array( 'class', $instance->contentClass->attribute( 'id' ) ),
-                           array( 'class_identifier', $instance->contentClass->attribute( 'identifier' ) ),                           
-                           array( 'class_group', $instance->contentClass->attribute( 'match_ingroup_id_list' ) ),
-                           array( 'attribute', $field->contentClassAttribute->attribute( 'id' ) ),                           
+        $keyArray = array( array( 'class', $instance->getContentClass()->attribute( 'id' ) ),
+                           array( 'class_identifier', $instance->getContentClass()->attribute( 'identifier' ) ),
+                           array( 'class_group', $instance->getContentClass()->attribute( 'match_ingroup_id_list' ) ),
+                           array( 'attribute', $field->contentClassAttribute->attribute( 'id' ) ),
                            array( 'attribute_identifier', $field->contentClassAttribute->attribute( 'identifier' ) ) );
         
         $tpl = eZTemplate::factory();
-        $tpl->setVariable( 'class', $instance->contentClass );
+        $tpl->setVariable( 'class', $instance->getContentClass() );
         $tpl->setVariable( 'attribute', $field->contentClassAttribute );
         
         $res = eZTemplateDesignResource::instance();
@@ -141,6 +141,11 @@ class OCClassSearchFormHelper
         {
             throw new Exception( "Class $classIdentifier not found" );
         }
+    }
+
+    public function getContentClass()
+    {
+        return $this->contentClass;
     }
 
     /**

@@ -20,21 +20,21 @@ class OCClassSearchFormAttributeRelations extends OCClassSearchFormAttributeFiel
                 'string' );
                 
             $facets = array( 'field' => $field, 'name'=> $this->attributes['name'], 'limit' => 300, 'sort' => 'alpha' );
-            
-            $fetchParameters = OCClassSearchFormHelper::result()->buildFetch();
 
-            $currentParameters = array();
-            $scopeParameters = array_merge(
-                array( 'SearchContentClassID' => array( $this->contentClassAttribute->attribute( 'contentclass_id' ) ),
-                       'Facet' => array( $facets ) ),
-                OCFacetNavgationHelper::map( OCClassSearchFormHelper::result()->getBaseParameters() )
+            $currentParameters = $baseParameters = array_merge(
+                OCClassSearchFormHelper::result()->getBaseParameters(),
+                array(
+                    'SearchContentClassID' => array( $this->contentClassAttribute->attribute( 'contentclass_id' ) ),
+                    'Facet' => array( $facets ),
+                    'SearchLimit' => 1
+                )
             );
-            if ( isset( $fetchParameters['class_id'] ) && $fetchParameters['class_id'] == $this->contentClassAttribute->attribute( 'contentclass_id' ) )
+            if ( OCClassSearchFormHelper::result()->isFetch() )
             {
-                $currentParameters = array_merge( OCFacetNavgationHelper::map( $fetchParameters ), $scopeParameters );
+                $currentParameters = array_merge( $currentParameters, OCClassSearchFormHelper::result()->getCurrentParameters() );
             }            
-            $params = array_merge( $currentParameters, $scopeParameters );            
-            $data = OCFacetNavgationHelper::navigationList( $scopeParameters, $currentParameters, OCClassSearchFormHelper::result()->searchText, OCClassSearchFormHelper::result()->isFetch() );
+
+            $data = OCFacetNavgationHelper::navigationList( $baseParameters, $currentParameters, OCClassSearchFormHelper::result()->searchText, OCClassSearchFormHelper::result()->isFetch() );
 
             if ( isset( $data[$this->attributes['name']] ) )
             {

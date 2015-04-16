@@ -9,14 +9,23 @@ class OCClassSearchFormAttributeDate extends OCClassSearchFormAttributeField
         $this->functionAttributes['current_bounds'] = 'getCurrentBounds';
     }
 
-    protected function getBounds()
+    protected function getBounds( $includeCurrentParameters = false )
     {
         $startTimestamp = $endTimestamp = 0;
         $sortField = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'sort' );
-        $params = array(
-            'SearchContentClassID' => $this->contentClassAttribute->attribute( 'contentclass_id' ),
-            'SearchLimit' => 1,
-            'SortBy' => array( $sortField => 'asc' )
+        $currentParameters = array();
+        if ( $includeCurrentParameters )
+        {
+            $currentParameters = OCClassSearchFormHelper::result()->getCurrentParameters();
+        }
+        $params = array_merge(
+            OCClassSearchFormHelper::result()->getBaseParameters(),
+            $currentParameters,
+            array(
+                'SearchContentClassID' => $this->contentClassAttribute->attribute( 'contentclass_id' ),
+                'SearchLimit' => 1,
+                'SortBy' => array( $sortField => 'asc' )
+            )
         );        
         $startSearch = OCFacetNavgationHelper::fetch( $params, OCClassSearchFormHelper::result()->searchText );
         /** @var $startSearchResults eZFindResultNode[] */
@@ -48,7 +57,7 @@ class OCClassSearchFormAttributeDate extends OCClassSearchFormAttributeField
         }
         else
         {
-            $data = $this->getBounds();
+            $data = $this->getBounds( true );
         }
         return $data;
     }

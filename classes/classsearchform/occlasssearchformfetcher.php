@@ -12,7 +12,9 @@ class OCClassSearchFormFetcher
     protected $isFetch = false;
 
     protected $baseParameters = array();
-    
+
+    protected $currentParameters = array();
+
     public $protectedFields = array( 'RedirectNodeID', 'RedirectUrlAlias' );
     
     public $searchText = '';
@@ -123,13 +125,13 @@ class OCClassSearchFormFetcher
             {
                 if ( !empty( $value ) )
                 {
-                    $this->baseParameters[$key] = $value;
+                    $this->currentParameters[$key] = $value;
                     $this->isFetch = true;
                 }
             }
             elseif ( $key == 'class_id' )
             {
-                $this->baseParameters[$key] = $value;
+                $this->currentParameters[$key] = $value;
                 $this->addFetchField( array(
                     'name' => ezpI18n::tr( 'extension/ezfind/facets', 'Content type' ),
                     'value' => eZContentClass::fetch( $value )->attribute( 'name' ),
@@ -151,8 +153,8 @@ class OCClassSearchFormFetcher
                 $this->isFetch = true;
             }                        
         }
-        $this->baseParameters['filter'] = $filters;
-        return $this->baseParameters;
+        $this->currentParameters['filter'] = $filters;
+        return $this->currentParameters;
     }
     
     public function isFetch()
@@ -163,7 +165,12 @@ class OCClassSearchFormFetcher
     
     public function getBaseParameters()
     {
-        return $this->baseParameters;
+        return OCFacetNavgationHelper::map( $this->baseParameters );
+    }
+
+    public function getCurrentParameters()
+    {
+        return OCFacetNavgationHelper::map( $this->currentParameters );
     }
     
     protected function fetch()
@@ -172,7 +179,7 @@ class OCClassSearchFormFetcher
         {
             if ( $this->isFetch() )
             {
-                $params = OCFacetNavgationHelper::map( $this->baseParameters );
+                $params = OCFacetNavgationHelper::map( array_merge( $this->baseParameters, $this->currentParameters ) );
                 eZDebug::writeNotice( $params );
                 self::$_result = OCFacetNavgationHelper::fetch( $params, $this->searchText );
             }
