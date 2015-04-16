@@ -13,14 +13,11 @@ class OCClassSearchFormAttributeDate extends OCClassSearchFormAttributeField
     {
         $startTimestamp = $endTimestamp = 0;
         $sortField = ezfSolrDocumentFieldBase::getFieldName( $this->contentClassAttribute, null, 'sort' );
-        $params = array_merge(
-            OCFacetNavgationHelper::map( OCClassSearchFormHelper::result()->getBaseParameters() ),
-            array(
-                'SearchContentClassID' => $this->contentClassAttribute->attribute( 'contentclass_id' ),
-                'SearchLimit' => 1,
-                'SortBy' => array( $sortField => 'asc' )
-            )
-        );
+        $params = array(
+            'SearchContentClassID' => $this->contentClassAttribute->attribute( 'contentclass_id' ),
+            'SearchLimit' => 1,
+            'SortBy' => array( $sortField => 'asc' )
+        );        
         $startSearch = OCFacetNavgationHelper::fetch( $params, OCClassSearchFormHelper::result()->searchText );
         /** @var $startSearchResults eZFindResultNode[] */
         $startSearchResults = $startSearch['SearchResult'];
@@ -47,7 +44,7 @@ class OCClassSearchFormAttributeDate extends OCClassSearchFormAttributeField
     {
         if ( $this->attribute( 'value' ) )
         {
-            $data = OCClassSearchFormDateFieldBounds::fromString( $this->attribute( 'value' ) );
+            $data = OCClassSearchFormDateFieldBounds::fromString( $this->attribute( 'value' ) );            
         }
         else
         {

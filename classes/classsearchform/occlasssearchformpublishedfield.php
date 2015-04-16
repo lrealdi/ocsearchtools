@@ -34,13 +34,10 @@ class OCClassSearchFormPublishedField extends OCClassSearchFormField
     {        
         $startTimestamp = $endTimestamp = 0;
         
-        $params = array_merge(
-            OCFacetNavgationHelper::map( OCClassSearchFormHelper::result()->getBaseParameters() ),
-            array(
-                'SearchContentClassID' => $this->currentClassId !== null ? array( $this->currentClassId ) : null,
-                'SearchLimit' => 1,
-                'SortBy' => array( 'published' => 'asc' )
-            )
+        $params = array(
+            'SearchContentClassID' => $this->currentClassId !== null ? array( $this->currentClassId ) : null,
+            'SearchLimit' => 1,
+            'SortBy' => array( 'published' => 'asc' )
         );    
         $startSearch = OCFacetNavgationHelper::fetch( $params, OCClassSearchFormHelper::result()->searchText );        
         if ( isset( $startSearch['SearchResult'][0] ) )

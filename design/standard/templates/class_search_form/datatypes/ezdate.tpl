@@ -3,6 +3,6 @@
 		 placeholder = 'gg-mm-aaaa'
 		 value = $input.value
 		 input_name = $input.name
-        bounds = $input.bounds
-        current_bounds = $input.current_bounds
+         bounds = $input.bounds
+         current_bounds = $input.current_bounds
 		 id = concat('search-for-',$input.id)}
