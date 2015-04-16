@@ -180,8 +180,12 @@ class OCClassSearchFormFetcher
             if ( $this->isFetch() )
             {
                 $params = OCFacetNavgationHelper::map( array_merge( $this->baseParameters, $this->currentParameters ) );
-                self::$_result = OCFacetNavgationHelper::fetch( $params, $this->searchText );
-                eZDebug::writeNotice( self::$_result['SearchExtras'] );
+                self::$_result = OCFacetNavgationHelper::fetch( $params, $this->searchText );            
+                if ( self::$_result['SearchCount'] == 0 )
+                {
+                    eZDebug::writeNotice( $params );
+                    eZDebug::writeNotice( self::$_result['SearchExtras'] );
+                }
             }
             else
                 self::$_result = false;

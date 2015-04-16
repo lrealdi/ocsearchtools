@@ -35,6 +35,7 @@ class OCClassSearchFormNumericFieldBounds implements OCClassSearchFormFieldBound
                 break;
 
             case 'end_js':
+            case 'end_solr':
                 return $this->end;
                 break;
             default: return false;
@@ -64,13 +65,19 @@ class OCClassSearchFormNumericFieldBounds implements OCClassSearchFormFieldBound
     }
 
     public function setStart( $value )
-    {
-        $this->start = $value;
+    {        
+        if ( $value instanceof eZContentObjectAttribute )
+            $this->start = $value->attribute( 'content' );
+        else
+            $this->start = $value;
     }
 
     public function setEnd( $value )
     {
-        $this->end = $value;
+        if ( $value instanceof eZContentObjectAttribute )
+            $this->end = $value->attribute( 'content' );
+        else
+            $this->end = $value;
     }
 
     public function humanString()

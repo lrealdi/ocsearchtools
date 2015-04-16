@@ -9,7 +9,9 @@ class OCClassSearchFormDateFieldBounds implements OCClassSearchFormFieldBoundsIn
     public function __construct()
     {
         $this->start = new DateTime();
+        $this->start->setTimezone( new DateTimeZone( date_default_timezone_get() ) );
         $this->end = new DateTime();
+        $this->end->setTimezone( new DateTimeZone( date_default_timezone_get() ) );
     }
 
     public function attributes()
@@ -72,14 +74,22 @@ class OCClassSearchFormDateFieldBounds implements OCClassSearchFormFieldBoundsIn
         return $data;
     }
 
-    public function setStart( $timestamp )
-    {
+    public function setStart( $date )
+    {        
+        if ( $date instanceof eZContentObjectAttribute )
+            $timestamp = $date->attribute( 'content' )->attribute( 'timestamp' );
+        else
+            $timestamp = $date;        
         $this->start->setTimestamp( $timestamp );
         $this->start->setTime( 00, 00 );
     }
 
-    public function setEnd( $timestamp )
+    public function setEnd( $date )
     {
+        if ( $date instanceof eZContentObjectAttribute )
+            $timestamp = $date->attribute( 'content' )->attribute( 'timestamp' );
+        else
+            $timestamp = $date;
         $this->end->setTimestamp( $timestamp );
         $this->end->setTime( 23, 59 );
     }

@@ -30,15 +30,23 @@ class OCClassSearchFormPublishedField extends OCClassSearchFormField
         ));        
     }
     
-    protected function getBounds()
+    protected function getBounds( $includeCurrentParameters = false )
     {        
         $startTimestamp = $endTimestamp = 0;
-        
-        $params = array(
-            'SearchContentClassID' => $this->currentClassId !== null ? array( $this->currentClassId ) : null,
-            'SearchLimit' => 1,
-            'SortBy' => array( 'published' => 'asc' )
-        );    
+        $currentParameters = array();
+        if ( $includeCurrentParameters )
+        {
+            $currentParameters = OCClassSearchFormHelper::result()->getCurrentParameters();
+        }
+        $params = array_merge(
+            OCClassSearchFormHelper::result()->getBaseParameters(),
+            $currentParameters,
+            array(
+                'SearchContentClassID' => $this->currentClassId !== null ? array( $this->currentClassId ) : null,
+                'SearchLimit' => 1,
+                'SortBy' => array( 'published' => 'asc' )
+            )
+        );        
         $startSearch = OCFacetNavgationHelper::fetch( $params, OCClassSearchFormHelper::result()->searchText );        
         if ( isset( $startSearch['SearchResult'][0] ) )
         {
@@ -52,20 +60,21 @@ class OCClassSearchFormPublishedField extends OCClassSearchFormField
         }
         
         $data = new OCClassSearchFormPublishedFieldBounds();
-        $data->setStartTimestamp( $startTimestamp );
-        $data->setEndTimestamp( $endTimestamp );
+        $data->setStart( $startTimestamp );
+        $data->setEnd( $endTimestamp );
         return $data;
     }
     
     protected function getCurrentBounds()
     {
-        if ( $this->attribute( 'value' ) )
+        $currentParameters = OCClassSearchFormHelper::result()->getCurrentParameters();
+        if ( $this->attribute( 'value' ) && $currentParameters['class_id'] == $this->currentClassId )
         {
             $data = OCClassSearchFormPublishedFieldBounds::fromString( $this->attribute( 'value' ) );            
         }
         else
         {
-            $data = $this->getBounds();
+            $data = $this->getBounds( $currentParameters['class_id'] == $this->currentClassId );
         }
         return $data;
     }    

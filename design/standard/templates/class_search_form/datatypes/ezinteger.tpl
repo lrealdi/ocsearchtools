@@ -3,6 +3,7 @@
 		placeholder = $input.class_attribute.name
 		value = $input.value
 		input_name = $input.name
+    decimals = false()
 		bounds = $input.bounds
 		current_bounds = $input.current_bounds
 		id = concat('search-for-',$input.id)}
