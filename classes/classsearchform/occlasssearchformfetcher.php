@@ -161,6 +161,11 @@ class OCClassSearchFormFetcher
         return $this->isFetch;
     }
     
+    public function getBaseParameters()
+    {
+        return $this->baseParameters;
+    }
+    
     protected function fetch()
     {        
         if ( self::$_result == null )
@@ -168,6 +173,7 @@ class OCClassSearchFormFetcher
             if ( $this->isFetch() )
             {
                 $params = OCFacetNavgationHelper::map( $this->baseParameters );
+                eZDebug::writeNotice( $params );
                 self::$_result = OCFacetNavgationHelper::fetch( $params, $this->searchText );
             }
             else

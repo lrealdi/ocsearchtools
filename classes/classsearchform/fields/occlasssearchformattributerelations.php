@@ -22,15 +22,18 @@ class OCClassSearchFormAttributeRelations extends OCClassSearchFormAttributeFiel
             $facets = array( 'field' => $field, 'name'=> $this->attributes['name'], 'limit' => 300, 'sort' => 'alpha' );
             
             $fetchParameters = OCClassSearchFormHelper::result()->buildFetch();
+
             $currentParameters = array();
-            $scopeParameters = array( 'SearchContentClassID' => array( $this->contentClassAttribute->attribute( 'contentclass_id' ) ),
-                                      'Facet' => array( $facets ) );
+            $scopeParameters = array_merge(
+                array( 'SearchContentClassID' => array( $this->contentClassAttribute->attribute( 'contentclass_id' ) ),
+                       'Facet' => array( $facets ) ),
+                OCFacetNavgationHelper::map( OCClassSearchFormHelper::result()->getBaseParameters() )
+            );
             if ( isset( $fetchParameters['class_id'] ) && $fetchParameters['class_id'] == $this->contentClassAttribute->attribute( 'contentclass_id' ) )
             {
                 $currentParameters = array_merge( OCFacetNavgationHelper::map( $fetchParameters ), $scopeParameters );
-            }
-            
-            $params = array_merge( $currentParameters, $scopeParameters );
+            }            
+            $params = array_merge( $currentParameters, $scopeParameters );            
             $data = OCFacetNavgationHelper::navigationList( $scopeParameters, $currentParameters, OCClassSearchFormHelper::result()->searchText, OCClassSearchFormHelper::result()->isFetch() );
 
             if ( isset( $data[$this->attributes['name']] ) )
