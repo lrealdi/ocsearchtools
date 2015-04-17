@@ -15,9 +15,12 @@ CustomMap[ezstring]=ocSolrDocumentFieldString
 CustomMap[ezgmaplocation]=ezfSolrDocumentFieldGmapLocation
 
 DatatypeMap[ezobjectrelationlist]=string
+DatatypeMap[ezinteger]=int
+DatatypeMap[ezfloat]=float
 
 DatatypeMapSort[ezstring]=string
 DatatypeMapSort[ezinteger]=sint
+DatatypeMapSort[ezfloat]=sfloat
 
 DatatypeMapFilter[ezstring]=string
 

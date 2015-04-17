@@ -68,13 +68,13 @@ class OCClassSearchFormPublishedField extends OCClassSearchFormField
     protected function getCurrentBounds()
     {
         $currentParameters = OCClassSearchFormHelper::result()->getCurrentParameters();
-        if ( $this->attribute( 'value' ) && $currentParameters['class_id'] == $this->currentClassId )
+        if ( $this->attribute( 'value' ) && isset( $currentParameters['class_id'] ) && $currentParameters['class_id'] == $this->currentClassId )
         {
             $data = OCClassSearchFormPublishedFieldBounds::fromString( $this->attribute( 'value' ) );            
         }
         else
         {
-            $data = $this->getBounds( $currentParameters['class_id'] == $this->currentClassId );
+            $data = $this->getBounds( isset( $currentParameters['class_id'] ) && $currentParameters['class_id'] == $this->currentClassId );
         }
         return $data;
     }    
