@@ -86,7 +86,7 @@ class OCCrossSearch
         $definition['ClientBasePath'] = self::CLIENT_BASE_PATH . $repositoryID;
         if ( !eZHTTPTool::getDataByURL( $serverInfoUrl, true ) )
         {            
-            throw new Exception( "Repository $repositoryID non raggiungibile" );
+            throw new Exception( "Repository $repositoryID ($serverInfoUrl) non raggiungibile" );
         }
         
         $serverInfo = json_decode( eZHTTPTool::getDataByURL( $serverInfoUrl ), true );        

@@ -10,6 +10,10 @@ $ViewList['view'] = array( 'functions' => array( 'view' ),
                            'script' => 'view.php',
                            'params' => array( 'NodeID' ) );
 
+$ViewList['search'] = array( 'functions' => array( 'view' ),
+                           'script' => 'search.php',
+                           'params' => array( 'NodeID' ) );
+
 $FunctionList['view'] = array();
 
 

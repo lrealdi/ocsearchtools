@@ -85,7 +85,7 @@ class OCFacetNavgationHelper
     {
         $this->query = $query;
         $this->baseUri = $baseUri;
-        $this->originalFetchParameters = $fetchParams;
+        $this->originalFetchParameters = $fetchParams;        
         $this->fetchParameters = $this->parseFetchParams( $fetchParams );        
         $this->parseUserParams( $userParameters );        
     }
@@ -440,7 +440,7 @@ class OCFacetNavgationHelper
     }
     
     protected function fetchResults()
-    {
+    {        
         $search = self::fetch( $this->fetchParameters, $this->query );
         return array(
             'contents' => $search['SearchResult'],
