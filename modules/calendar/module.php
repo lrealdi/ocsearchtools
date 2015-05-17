@@ -12,7 +12,7 @@ $ViewList['view'] = array( 'functions' => array( 'view' ),
 
 $ViewList['search'] = array( 'functions' => array( 'view' ),
                            'script' => 'search.php',
-                           'params' => array( 'NodeID' ) );
+                           'params' => array( 'ContextIdentifier' ) );
 
 $FunctionList['view'] = array();
 

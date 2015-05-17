@@ -44,7 +44,7 @@ class ocSolrDocumentFieldDate extends ezfSolrDocumentFieldBase
         if ( $metaData !== NULL && $metaData > 0 )
         {
             $processedMetaDataArray = array();
-            $processedMetaDataArray[] = $this->preProcessValue( $metaData, self::getClassAttributeType( $contentClassAttribute ) );            
+            $processedMetaDataArray[] = strftime( '%Y-%m-%dT%H:%M:%SZ', (int)$metaData );
             
             $fieldNameArray = array();
             foreach ( array_keys( eZSolr::$fieldTypeContexts ) as $context )
@@ -69,7 +69,7 @@ class ocSolrDocumentFieldDate extends ezfSolrDocumentFieldBase
             $fieldNameArray = array_unique( $fieldNameArray );
             foreach ( $fieldNameArray as $fieldName )
             {
-                $fields[$fieldName] = parent::convertTimestampToDate( strtotime( $year . '-01-01' ) ); ;
+                $fields[$fieldName] = strftime( '%Y-%m-%dT%H:%M:%SZ', strtotime( $year . '-01-01' ) );
             }
             
             $fieldNameArray = array();
@@ -80,7 +80,7 @@ class ocSolrDocumentFieldDate extends ezfSolrDocumentFieldBase
             $fieldNameArray = array_unique( $fieldNameArray );
             foreach ( $fieldNameArray as $fieldName )
             {
-                $fields[$fieldName] = parent::convertTimestampToDate( strtotime( $year . '-' . $month . '-01' ) );
+                $fields[$fieldName] = strftime( '%Y-%m-%dT%H:%M:%SZ', strtotime( $year . '-' . $month . '-01' ) );
             }
             
             
