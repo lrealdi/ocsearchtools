@@ -201,7 +201,7 @@ class OCCalendarSearchContext implements OCCalendarSearchContextInterface
         //$allEvents = array();
         foreach( $rawResults as $rawResult )
         {
-            $event = OCCalendarSearchResultItem::instance( $rawResult, $this->contextIdentifier );
+            $event = OCCalendarSearchResultItem::instance( $rawResult, $this );
             $events[] = $event;
             //$allEvents[] = $event->toHash();
         }
