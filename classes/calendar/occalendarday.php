@@ -19,6 +19,7 @@ class OCCalendarDay implements ArrayAccess
     
     function __construct( $identifier )
     {
+        $locale = eZLocale::instance();        
         $format = OCCalendarData::FULLDAY_IDENTIFIER_FORMAT;
         $this->identifier = $identifier;
         $dateTime = DateTime::createFromFormat( $format, $identifier, OCCalendarData::timezone() );
@@ -26,9 +27,14 @@ class OCCalendarDay implements ArrayAccess
         {            
             throw new Exception( "$identifier in format '$format' is not a valid DateTime" );
         }
-        $this->day = $dateTime->setTime( 0, 0, 0 )->format( 'j' );
-        $this->month = $dateTime->setTime( 0, 0, 0 )->format( 'n' );
-        $this->year = $dateTime->setTime( 0, 0, 0 )->format( 'Y' );
+        $dateTime->setTime( 0, 0, 0 );
+        $this->day = $dateTime->format( 'j' );
+        $this->shortDayName = $locale->shortDayName( $dateTime->format( 'w' ) );
+        $this->longDayName = $locale->longDayName( $dateTime->format( 'w' ) );
+        $this->month = $dateTime->format( 'n' );
+        $this->longMonthName = $locale->longMonthName( $this->month );
+        $this->shortMonthName = $locale->shortMonthName( $this->month );
+        $this->year = $dateTime->format( 'Y' );
         $this->urlSuffix = "/(day)/{$this->day}/(month)/{$this->month}/(year)/{$this->year}";
         $this->dayStartDateTime = clone $dateTime;
         $this->dayStartDateTime->setTime( 0, 0, 0 );

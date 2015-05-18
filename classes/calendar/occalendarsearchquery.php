@@ -6,6 +6,8 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
 
     protected $request = array();
 
+    protected $parsedRequest = array();
+
     /**
      * @var OCCalendarSearchContext
      */
@@ -80,7 +82,7 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
     protected function __construct( $request, $contextIdentifier, $contextParameters = array() )
     {
         $this->request = $request;
-        $this->context = OCCalendarSearchContext::instance( $contextIdentifier, $contextParameters );
+        $this->context = OCCalendarSearchContext::instance( $contextIdentifier, $contextParameters, $this->request );        
         $this->solrFetchParams = array_merge( $this->solrFetchParams, $this->context->solrFetchParams() );
         $this->parse();
         $this->fetch();
@@ -138,7 +140,7 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
         }
         $facets = array();
         $taxonomyIdentifiers = array( 'what', 'where', 'target', 'category' );
-        $forceTaxonomyIdentifiers = array( 'target', 'category' );
+        $forceTaxonomyIdentifiers = $this->context->forceTaxonomyIdentifiers;
         foreach( $taxonomyIdentifiers as $taxonomyIdentifier )
         {
             $taxonomy = OCCalendarSearchTaxonomy::instance( $taxonomyIdentifier, $this->context );
@@ -148,12 +150,17 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
                 foreach( $taxonomy->getTree() as $item )
                 {
                     $facetItem = $this->makeFacetItem( $item, $currentFacetsResult );
-                    if ( $facetItem )
+                    if( in_array( $taxonomyIdentifier, $forceTaxonomyIdentifiers ) )
+                    {
+                        $item['is_selectable'] = $facetItem != false;
+                        $facets[$taxonomyIdentifier][] = $item;
+                    }
+                    elseif ( $facetItem )
                     {
                         $item['is_selectable'] = 1;
                         $facets[$taxonomyIdentifier][] = $facetItem;
                     }
-                    elseif ( isset( $this->request[ $taxonomyIdentifier ] ) && in_array( $item['id'], $this->request[ $taxonomyIdentifier ] ) )
+                    elseif ( isset( $this->parsedRequest[ $taxonomyIdentifier ] ) && in_array( $item['id'], $this->parsedRequest[ $taxonomyIdentifier ] ) )
                     {
                         $children = array();
                         if ( $item['children'] > 0 )
@@ -170,12 +177,7 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
                         }
                         $item['is_selectable'] = 1;
                         $facets[$taxonomyIdentifier][] = $item;
-                    }
-                    elseif( in_array( $taxonomyIdentifier, $forceTaxonomyIdentifiers ) )
-                    {
-                        $item['is_selectable'] = 0;
-                        $facets[$taxonomyIdentifier][] = $item;
-                    }
+                    }                    
                 }
             }
         }
@@ -220,6 +222,7 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
     {
         return array(
             'facet_fields' => $this->solrResult['FacetFields'],
+            'query' => $this->solrQuery,
             'params' => $this->solrFetchParams,
             'result' => $this->solrResult
         );
@@ -327,6 +330,7 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
         if ( isset( $this->request['text'] ) )
         {
             $this->solrQuery = $this->request['text'];
+            $this->parsedRequest['text'] = $this->request['text'];
         }
 
         if ( isset( $this->request['when'] ) )
@@ -366,6 +370,7 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
                 default:
                     throw new Exception( "When identifier not handled" );
             }
+            $this->parsedRequest['when'] = $this->request['when'];
         }
 
         if ( isset( $this->request['dateRange'] )
@@ -377,27 +382,64 @@ class OCCalendarSearchQuery implements OCCalendarSearchQueryInterface
                 $start = DateTime::createFromFormat( 'Ymd', $this->request[ 'dateRange' ][0], new DateTimeZone( "Europe/Rome" ) );
                 $end = DateTime::createFromFormat( 'Ymd', $this->request[ 'dateRange' ][1], new DateTimeZone( "Europe/Rome" ) );
                 $this->addSolrFilter( $this->getSolrDateFilter( $start, $end ) );
+                $this->parsedRequest['dateRange'] = $this->request['dateRange'];
             }
         }
 
-        if ( isset( $this->request['what'] ) )
-        {
-            $this->parseTaxonomy( $this->request['what'], 'what' );
+        if ( isset( $this->request['what'] ) || isset( $this->request['_what'] ) )
+        {            
+            $what = array();
+            if ( isset( $this->request['what'] ) )
+            {
+                $this->request['what'] = intval( $this->request['what'] );
+                $what[] = $this->request['what'];
+            }
+            if ( isset( $this->request['_what'] ) )
+            {
+                if ( !is_array( $this->request['_what'] ) )
+                {
+                    $this->request['_what'] = array( $this->request['_what'] );
+                }
+                $this->request['_what'] = array_map( 'intval', $this->request['_what'] );
+                $what = array_merge( $what, $this->request['_what'] );
+            }
+            $this->parsedRequest['what'] = $what;
+            $this->parseTaxonomy( $what, 'what' );
         }
-
-        if ( isset( $this->request['where'] ) )
+        
+        if ( isset( $this->request['where'] ) || isset( $this->request['_where'] ) )
         {
-            $this->parseTaxonomy( $this->request['where'], 'where' );
+            $where = array();
+            if ( isset( $this->request['where'] ) )
+            {
+                $this->request['where'] = intval( $this->request['where'] );                
+                $where[] = $this->request['where'];
+            }
+            if ( isset( $this->request['_where'] ) )
+            {
+                if ( !is_array( $this->request['_where'] ) )
+                {
+                    $this->request['_where'] = array( $this->request['_where'] );
+                }
+                $this->request['_where'] = array_map( 'intval', $this->request['_where'] );
+                $where = array_merge( $where, $this->request['_where'] );
+            }              
+            $this->parsedRequest['where'] = $where;
+            $this->parseTaxonomy( $where, 'where' );
         }
 
         if ( isset( $this->request['target'] ) )
         {
+            $this->request['target'] = array_map( 'intval', $this->request['target'] );
             $this->parseTaxonomy( $this->request['target'], 'target' );
+            $this->parsedRequest['target'] = $this->request['target'];
         }
 
         if ( isset( $this->request['category'] ) )
         {
+            $this->request['category'] = array_map( 'intval', $this->request['category'] );
             $this->parseTaxonomy( $this->request['category'], 'category' );
+            $this->parsedRequest['category'] = $this->request['category'];
         }
     }
 

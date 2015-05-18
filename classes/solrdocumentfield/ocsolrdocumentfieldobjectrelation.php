@@ -455,6 +455,11 @@ class ocSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                     }
                     $returnArray = array_merge_recursive( $returnArray, $returnArrayRelatedObject);
                 }
+                
+                $defaultFieldName = parent::generateAttributeFieldName( $contentClassAttribute, self::$subattributesDefinition[self::DEFAULT_SUBATTRIBUTE] );
+                $stringFieldName = parent::generateAttributeFieldName( $contentClassAttribute, 'string' );                
+                $returnArray[$defaultFieldName] = $this->getPlainTextRepresentation();
+                $returnArray[$stringFieldName] = $this->getPlainTextRepresentation();
 		
                 $result = array();
                 foreach ( $returnArray as $key => $value )

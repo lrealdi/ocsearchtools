@@ -44,10 +44,11 @@ try
     {
         $ids[] = $object['id'];
     }
-    
+        
     if ( count( $ids ) > 0 )
     {
         $count = count( $ids );
+        $cli->output( "Reindex $count objects" );
         $output = new ezcConsoleOutput();
         $progressBarOptions = array( 'emptyChar' => ' ', 'barChar'  => '=' );
         $progressBarOptions['minVerbosity'] = 10;    

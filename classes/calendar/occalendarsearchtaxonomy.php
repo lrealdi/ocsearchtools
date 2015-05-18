@@ -19,7 +19,7 @@ class OCCalendarSearchTaxonomy
         $this->context = $context;
         
         $currentSiteAccess = $GLOBALS['eZCurrentAccess']['name'];
-        $cacheFileName = $this->taxonomyIdentifier . '_' . $this->context->cacheKey() . '.cache';
+        $cacheFileName = $this->taxonomyIdentifier . '_' . $this->context->taxonomiesCacheKey() . '.cache';
         $cacheFilePath = eZDir::path( array( eZSys::cacheDirectory(), self::cacheDirectory(), $currentSiteAccess, $cacheFileName ) );
         
         $parameters = array(
@@ -93,7 +93,7 @@ class OCCalendarSearchTaxonomy
         {
             /** @var OCCalendarSearchContext $context */
             $context = $parameters['context'];
-            eZDebug::writeNotice( "Generate calendartaxonomy " . $parameters['taxonomyIdentifier'] . " for " . $context->cacheKey(), __METHOD__ );
+            eZDebug::writeNotice( "Generate calendartaxonomy " . $parameters['taxonomyIdentifier'] . " for " . $context->taxonomiesCacheKey(), __METHOD__ );
             $result = $context->taxonomyTree( $parameters['taxonomyIdentifier'] );
         }
         return array( 'content' => $result,
@@ -121,6 +121,9 @@ class OCCalendarSearchTaxonomy
         $cacheBaseDir = eZDir::path( array( eZSys::cacheDirectory(), self::cacheDirectory() ) );                
         $fileHandler = eZClusterFileHandler::instance();
         $fileHandler->fileDeleteByDirList( $siteAccesses, $cacheBaseDir, '' );
+        
+        $fileHandler = eZClusterFileHandler::instance( $cacheBaseDir );
+        $fileHandler->purge();
     }
     
     public function getSolrFilters( array $data )

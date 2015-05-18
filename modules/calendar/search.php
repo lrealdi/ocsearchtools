@@ -11,14 +11,14 @@ $query = OCCalendarSearchQuery::instance( $_GET, $contextIdentifier, $contextPar
 $data = OCCalendarSearch::instance( $query );
 
 $output = array(
+    'query' => $data->query(),
     'result' => $data->result(),
     'facets' => $data->facets()    
 );
 
 if ( $debug )
 {
-    echo '<pre>';
-    $output['query'] = $data->query();
+    echo '<pre>';    
     $output['solrData'] = $data->solrData();
     print_r($output);
     eZDisplayDebug();
