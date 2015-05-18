@@ -3,42 +3,41 @@
 class OCCalendarSearch
 {
     
-    protected $query;
+    protected $queryHandler;
     
-    //@todo caricare classe da ini
-    public static function instance( $query )
+    final public static function instance( $query )
     {
         return new OCCalendarSearch( $query );
     }
     
     protected function __construct( OCCalendarSearchQuery $query )
     {
-        $this->query = $query;
+        $this->queryHandler = $query;
     }
     
     // per fare debug
     public function query()
     {
-        return $this->query->getRequest();    
+        return $this->queryHandler->getRequest();
     }
     
     // per fare debug
     public function solrData()
     {
-        return $this->query->getSolrData(); 
+        return $this->queryHandler->getSolrData();
     }
     
     public function facets()
     {
-        return $this->query->makeFacets();        
+        return $this->queryHandler->makeFacets();
     }
     
     public function result()
     {
         $result = array(
-            'current_dates' => $this->query->makeDate(),
-            'events' => $this->query->makeEvents(),
-            'count' => $this->query->makeEventCount()
+            'current_dates' => $this->queryHandler->makeDate(),
+            'events' => $this->queryHandler->makeEvents(),
+            'count' => $this->queryHandler->makeEventCount()
         );
         return $result;
     }    

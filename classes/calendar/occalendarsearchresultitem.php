@@ -1,16 +1,32 @@
 <?php
 
-class OCCalendarSearchResultItem extends OCCalendarItem implements ArrayAccess 
+class OCCalendarSearchResultItem extends OCCalendarItem implements ArrayAccess, OCCalendarSearchResultItemInterface
 {
     
     protected $rawResult;
 
     protected $data;
-    
-    //@todo caricare classe da ini
-    public static function instance( array $rawResult )
+
+    /**
+     * @param array $rawResult
+     * @param OCCalendarSearchContext $context
+     *
+     * @return OCCalendarSearchResultItem
+     */
+    final public static function instance( array $rawResult, OCCalendarSearchContext $context  )
     {
-        return new OCCalendarSearchResultItem( $rawResult );
+        $ini = eZINI::instance( 'ocsearchtools.ini' );
+        $className = 'OCCalendarSearchResultItem';
+        $contextIdentifier = $context->identifier();
+        if ( $ini->hasVariable( 'CalendarSearchContext_' . $contextIdentifier, 'SearchResultItem' ) )
+        {
+            $className = $ini->variable( 'CalendarSearchContext_' . $contextIdentifier, 'SearchResultItem' );
+        }
+        elseif ( $ini->hasVariable( 'CalendarSearchHandlers', 'SearchResultItem' ) )
+        {
+            $className = $ini->variable( 'CalendarSearchHandlers', 'SearchResultItem' );
+        }
+        return new $className( $rawResult );
     }
     
     protected function __construct( array $rawResult )

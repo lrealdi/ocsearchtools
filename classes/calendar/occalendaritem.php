@@ -164,6 +164,20 @@ class OCCalendarItem
             $this->node = eZContentObjectTreeNode::fetch( $this->data['main_node_id'] );
         }
         return $this->node;
-    }    
+    }
+
+    protected function fakeToTime( DateTime $from )
+    {
+        /** @var DateTime $toDate */
+        $toDate = clone $from;
+        $interval = new DateInterval( OpenPAINI::variable( 'Calendar', 'FakeToTimeInterval', 'PT1H' ) );
+        if ( !$interval instanceof DateInterval )
+        {
+            throw new Exception( OpenPAINI::variable( 'Calendar', 'FakeToTimeInterval', 'PT1H' ) . " is not a valid DateInterval: check openpa.ini[Calendar]/FakeToTimeInterval" );
+        }
+        $toDate->add( $interval );
+        $this->data['fake_to_time'] = true;
+        return $toDate;
+    }
     
 }

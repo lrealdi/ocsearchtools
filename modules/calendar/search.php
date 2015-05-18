@@ -3,9 +3,11 @@
 /** @var eZModule $module */
 $Module = $Params['Module'];
 $debug = isset( $_GET['_debug'] );
-$contextIdentifier = $Params['ContextIdentifier'];
 
-$query = OCCalendarSearchQuery::instance( $_GET, $contextIdentifier );
+$contextIdentifier = $Params['ContextIdentifier'];
+$contextParameters = $Params['UserParameters'];
+
+$query = OCCalendarSearchQuery::instance( $_GET, $contextIdentifier, $contextParameters );
 $data = OCCalendarSearch::instance( $query );
 
 $output = array(

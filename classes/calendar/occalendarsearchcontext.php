@@ -1,32 +1,41 @@
 <?php
 
-class OCCalendarSearchContext
+class OCCalendarSearchContext implements OCCalendarSearchContextInterface
 {
     
     protected $contextIdentifier;
         
-    protected $solrBaseFields;
-    protected $fetchParams;
-    protected $fetchRootNodeId;
-    protected $solrFetchParams;    
+    protected $solrBaseFields = array();
+
+    protected $taxonomyFetchParams = array();
+
+    protected $taxonomyFetchRootNodeId = array();
+
+    protected $solrFetchParams = array();
     
-    public static function instance( $contextIdentifier )
+    final public static function instance( $contextIdentifier, $contextParameters = array() )
     {
-        return new OCCalendarSearchContext( $contextIdentifier );
+        $ini = eZINI::instance( 'ocsearchtools.ini' );
+        if ( $ini->hasVariable( 'CalendarSearchContext_' . $contextIdentifier, 'SearchContext' ) )
+        {
+            $className = $ini->variable( 'CalendarSearchContext_' . $contextIdentifier, 'SearchContext' );
+            return new $className( $contextIdentifier, $contextParameters );
+        }
+        throw new Exception( "SearchContext class for $contextIdentifier not found" );
     }
     
-    protected function __construct( $contextIdentifier )
+    protected function __construct( $contextIdentifier, $contextParameters = array() )
     {
         $this->contextIdentifier = $contextIdentifier;
         
-        $this->fetchRootNodeId = array(
+        $this->taxonomyFetchRootNodeId = array(
             'what' => 200420,
             'where' => 6392,
             'target' => 478657,
             'category' => 22155
         );
         
-        $this->fetchParams = array(
+        $this->taxonomyFetchParams = array(
             'what' => array(
                 'ClassFilterType' => 'include',
                 'ClassFilterArray' => array( 'tipo_evento' ),
@@ -61,7 +70,7 @@ class OCCalendarSearchContext
             )
         );
         
-        // class_identifier => attribte_identifier
+        // class_identifier => attribute_identifier
         $this->solrBaseFields = array(
             'what' => array(
                 'tipo_evento' => array( 'tipo_evento' )
@@ -137,6 +146,11 @@ class OCCalendarSearchContext
         );
     }
     
+    public function identifier()
+    {
+        return $this->contextIdentifier;
+    }
+
     public function cacheKey()
     {
         return $this->contextIdentifier;
@@ -145,11 +159,6 @@ class OCCalendarSearchContext
     public function solrFetchParams()
     {
         return $this->solrFetchParams;
-    }
-    
-    public function solrFacetFields()
-    {
-        return $this->solrFacetFields;
     }
     
     public function taxonomyTree( $taxonomyIdentifier )
@@ -161,7 +170,7 @@ class OCCalendarSearchContext
             case 'target':
             case 'category':
                 $data = array();
-                $nodes = eZContentObjectTreeNode::subTreeByNodeID( $this->fetchParams[$taxonomyIdentifier], $this->fetchRootNodeId[$taxonomyIdentifier] );
+                $nodes = eZContentObjectTreeNode::subTreeByNodeID( $this->taxonomyFetchParams[$taxonomyIdentifier], $this->taxonomyFetchRootNodeId[$taxonomyIdentifier] );
                 foreach( $nodes as $node )
                 {
                     $data[] = $this->walkTaxonomyItem( $node, $taxonomyIdentifier );
@@ -170,76 +179,6 @@ class OCCalendarSearchContext
             break;
         }
         return false;
-    }
-    
-    protected function walkTaxonomyItem( $node, $taxonomyIdentifier )
-    {
-        $item = array(
-            'name' => $node->attribute( 'name' ),
-            'main_node_id' => $node->attribute( 'object' )->attribute( 'main_node_id' ),
-            'main_parent_node_id' => $node->attribute( 'object' )->attribute( 'main_parent_node_id' ),
-            'id' => $node->attribute( 'contentobject_id' ),
-            'solr_filter' => array(),
-            'children' => array()
-        );
-        $solrIdFields = array();
-        if ( $this->solrBaseFields[$taxonomyIdentifier][$node->attribute( 'class_identifier' )] )
-        {
-            foreach( $this->solrBaseFields[$taxonomyIdentifier][$node->attribute( 'class_identifier' )] as $baseField )
-            {
-                $solrIdFields[] = "submeta_{$baseField}___id____si";
-            }
-        }
-        
-        $children = eZContentObjectTreeNode::subTreeByNodeID( $this->fetchParams[$taxonomyIdentifier], $node->attribute( 'node_id' ) );
-        $parentFields = array();
-        foreach( $children as $child )
-        {
-            $item['children'][] = $this->walkTaxonomyItem( $child, $taxonomyIdentifier );
-            foreach( $this->solrBaseFields[$taxonomyIdentifier][$child->attribute( 'class_identifier' )] as $baseField )
-            {
-                $parentFields[] = "submeta_{$baseField}___path____si";
-            }
-        }
-        $parentFields = array_unique( $parentFields );
-        if ( count( $parentFields ) )
-        {
-            if ( count( $solrIdFields ) > 0 )
-            {
-                foreach( $solrIdFields as $solrIdField )
-                {
-                    $solrFilter = array(
-                        'or',
-                        $solrIdField . ':' . $item['id']                    
-                    );                    
-                    foreach( $parentFields as $parentField )
-                    {
-                        $solrFilter[] = $parentField . ':' . $item['main_node_id'];
-                    }
-                    $item['solr_filter'][] = $solrFilter;
-                }
-            }
-            else
-            {
-                $solrFilter = array( 'or' );
-                foreach( $item['children'] as $child )
-                {
-                    $solrFilter = array_merge( $solrFilter, $child['solr_filter'] );
-                }
-                $item['solr_filter'] = $solrFilter;
-            }
-        }
-        else
-        {
-            foreach( $solrIdFields as $solrIdField )
-            {
-                if ( $solrIdField )
-                {
-                    $item['solr_filter'][] = $solrIdField . ':' . $item['id'];
-                }
-            }
-        }
-        return $item;
     }
     
     public function getSolrFilters( array $data, OCCalendarSearchTaxonomy $taxonomy )
@@ -256,13 +195,13 @@ class OCCalendarSearchContext
         return empty( $filter ) ? false : $filter;
     }
     
-    public function parseResults( $rawResults, DateTime $startDateTime, DateTime $endDateTime = null )
+    public function parseResults( array $rawResults, DateTime $startDateTime, DateTime $endDateTime = null )
     {        
         $events = array();
         //$allEvents = array();
         foreach( $rawResults as $rawResult )
         {
-            $event = OCCalendarSearchResultItem::instance( $rawResult );
+            $event = OCCalendarSearchResultItem::instance( $rawResult, $this->contextIdentifier );
             $events[] = $event;
             //$allEvents[] = $event->toHash();
         }
@@ -305,8 +244,14 @@ class OCCalendarSearchContext
         }
         return $data;
     }
-    
-    public function eventIsA( $event, $taxonomyItem )
+
+    /**
+     * @param OCCalendarSearchResultItem $event
+     * @param array $taxonomyItem
+     *
+     * @return bool
+     */
+    protected function eventIsA( $event, $taxonomyItem )
     {
         if ( isset( $event['tipo_evento'] ) )
         {
@@ -330,7 +275,13 @@ class OCCalendarSearchContext
         }
         return false;
     }
-    
+
+    /**
+     * @param OCCalendarSearchResultItem[] $events
+     * @param $taxonomyItem
+     *
+     * @return OCCalendarSearchResultItem[]
+     */
     protected function byTaxonomyEvents( $events, $taxonomyItem )
     {
         $eventsByTaxonomy = array();
@@ -343,8 +294,15 @@ class OCCalendarSearchContext
         }
         return $eventsByTaxonomy;
     }
-    
-    protected function byDayEvents( $events, $startDateTime, $endDateTime )
+
+    /**
+     * @param OCCalendarSearchResultItem[] $events
+     * @param DateTime $startDateTime
+     * @param DateTime $endDateTime
+     *
+     * @return OCCalendarDay[]
+     */
+    protected function byDayEvents( $events, $startDateTime, $endDateTime = null )
     {
         $eventsByDay = array();        
         if ( $endDateTime instanceof DateTime )
@@ -356,6 +314,7 @@ class OCCalendarSearchContext
         {
             $byDayPeriod = array( $startDateTime );
         }
+        /** @var DateTime[] $byDayPeriod */
         foreach( $byDayPeriod as $date )
         {
             $identifier = $date->format( OCCalendarData::FULLDAY_IDENTIFIER_FORMAT );            
@@ -368,6 +327,85 @@ class OCCalendarSearchContext
         }
         
         return $eventsByDay;
+    }
+
+    /**
+     * @param eZContentObjectTreeNode $node
+     * @param string $taxonomyIdentifier
+     *
+     * @return array
+     */
+    protected function walkTaxonomyItem( $node, $taxonomyIdentifier )
+    {
+        /** @var eZContentObject $object */
+        $object = $node->attribute( 'object' );
+        $item = array(
+            'name' => $node->attribute( 'name' ),
+            'main_node_id' => $object->attribute( 'main_node_id' ),
+            'main_parent_node_id' => $object->attribute( 'main_parent_node_id' ),
+            'id' => $node->attribute( 'contentobject_id' ),
+            'solr_filter' => array(),
+            'children' => array()
+        );
+        $solrIdFields = array();
+        if ( $this->solrBaseFields[$taxonomyIdentifier][$node->attribute( 'class_identifier' )] )
+        {
+            foreach( $this->solrBaseFields[$taxonomyIdentifier][$node->attribute( 'class_identifier' )] as $baseField )
+            {
+                $solrIdFields[] = "submeta_{$baseField}___id____si";
+            }
+        }
+
+        /** @var eZContentObjectTreeNode[] $children */
+        $children = eZContentObjectTreeNode::subTreeByNodeID( $this->taxonomyFetchParams[$taxonomyIdentifier], $node->attribute( 'node_id' ) );
+        $parentFields = array();
+        foreach( $children as $child )
+        {
+            $item['children'][] = $this->walkTaxonomyItem( $child, $taxonomyIdentifier );
+            foreach( $this->solrBaseFields[$taxonomyIdentifier][$child->attribute( 'class_identifier' )] as $baseField )
+            {
+                $parentFields[] = "submeta_{$baseField}___path____si";
+            }
+        }
+        $parentFields = array_unique( $parentFields );
+        if ( count( $parentFields ) )
+        {
+            if ( count( $solrIdFields ) > 0 )
+            {
+                foreach( $solrIdFields as $solrIdField )
+                {
+                    $solrFilter = array(
+                        'or',
+                        $solrIdField . ':' . $item['id']
+                    );
+                    foreach( $parentFields as $parentField )
+                    {
+                        $solrFilter[] = $parentField . ':' . $item['main_node_id'];
+                    }
+                    $item['solr_filter'][] = $solrFilter;
+                }
+            }
+            else
+            {
+                $solrFilter = array( 'or' );
+                foreach( $item['children'] as $child )
+                {
+                    $solrFilter = array_merge( $solrFilter, $child['solr_filter'] );
+                }
+                $item['solr_filter'] = $solrFilter;
+            }
+        }
+        else
+        {
+            foreach( $solrIdFields as $solrIdField )
+            {
+                if ( $solrIdField )
+                {
+                    $item['solr_filter'][] = $solrIdField . ':' . $item['id'];
+                }
+            }
+        }
+        return $item;
     }
     
 }

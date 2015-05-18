@@ -88,8 +88,14 @@ class OCCalendarSearchTaxonomy
     public static function generateCache( $file, $args )
     {
         extract( $args );
-        eZDebug::writeNotice( "Generate calendartaxonomy " . $parameters['taxonomyIdentifier'] . " for " . $parameters['context']->cacheKey(), __METHOD__ );
-        $result = $parameters['context']->taxonomyTree( $parameters['taxonomyIdentifier'] );
+        $result = false;
+        if ( isset( $parameters ) )
+        {
+            /** @var OCCalendarSearchContext $context */
+            $context = $parameters['context'];
+            eZDebug::writeNotice( "Generate calendartaxonomy " . $parameters['taxonomyIdentifier'] . " for " . $context->cacheKey(), __METHOD__ );
+            $result = $context->taxonomyTree( $parameters['taxonomyIdentifier'] );
+        }
         return array( 'content' => $result,
                       'scope'   => self::CACHE_IDENTIFIER );
     }
@@ -97,7 +103,6 @@ class OCCalendarSearchTaxonomy
     public static function clearCache()
     {        
         eZDebug::writeNotice( "Clear calendar taxonomy cache", __METHOD__ );
-        $siteAccesses = array();
         $ini = eZINI::instance();
         if ( $ini->hasVariable( 'SiteAccessSettings', 'RelatedSiteAccessList' ) &&
              $relatedSiteAccessList = $ini->variable( 'SiteAccessSettings', 'RelatedSiteAccessList' ) )
