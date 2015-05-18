@@ -44,7 +44,7 @@ class OCCalendarSearchQuery
     public $solrResult = array();
     
     public static function instance( $query, $contextIdentifier )
-    {
+    {        
         return new OCCalendarSearchQuery( $query, $contextIdentifier );
     }
     
@@ -189,7 +189,8 @@ class OCCalendarSearchQuery
                 case 'weekend':
                 {
                     $currentDate = new DateTime( 'now' );
-                    if ( $currentDate->format('N') >= 6 )
+                    
+                    if ( $currentDate->format( 'N' ) == 6 )
                     {
                         $start = clone $currentDate;
                     }
@@ -201,6 +202,12 @@ class OCCalendarSearchQuery
                     $end->add(new DateInterval( 'P1D' ) );
                     $this->addSolrFilter( $this->getSolrDateFilter( $start, $end ) );
                 } break;
+                
+                case 'range':
+                    break;
+                
+                default:
+                    throw new Exception( "When identifier not handled" );
             }
         }
         
@@ -341,7 +348,7 @@ class OCCalendarSearchQuery
         $forceTaxonomyIdentifiers = array( 'target', 'category' );
         foreach( $taxonomyIdentifiers as $taxonomyIdentifier )
         {
-            $taxonomy = $taxonomy = OCCalendarSearchTaxonomy::instance( $taxonomyIdentifier, $this->context );
+            $taxonomy = OCCalendarSearchTaxonomy::instance( $taxonomyIdentifier, $this->context );
             if ( $taxonomy instanceof OCCalendarSearchTaxonomy )
             {                
                 $facets[$taxonomyIdentifier] = array();
@@ -383,8 +390,8 @@ class OCCalendarSearchQuery
     }
     
     public function makeEvents()
-    {
-        return $this->solrResult['SearchResult'];
+    {                
+        return $this->context->parseResults( $this->solrResult['SearchResult'], $this->start, $this->end );
     }
     
     public function makeEventCount()
@@ -397,11 +404,16 @@ class OCCalendarSearchQuery
         $date = array();
         if ( $this->start instanceof DateTime )
         {
-            $date[] = $this->start->format( 'd/m/Y' );
+            $from = $this->start->format( 'd/m/Y' );
+            $date[] = $from;
         }
         if ( $this->end instanceof DateTime )
         {
-            $date[] = $this->end->format( 'd/m/Y' );
+            $to = $this->end->format( 'd/m/Y' );
+            if ( $to != $from )
+            {
+                $date[] = $to;
+            }
         }
         return $date;
     }    

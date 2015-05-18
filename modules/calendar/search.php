@@ -9,8 +9,8 @@ $query = OCCalendarSearchQuery::instance( $_GET, $contextIdentifier );
 $data = OCCalendarSearch::instance( $query );
 
 $output = array(
-    'facets' => $data->facets(),    
-    'result' => $data->result()
+    'result' => $data->result(),
+    'facets' => $data->facets()    
 );
 
 if ( $debug )

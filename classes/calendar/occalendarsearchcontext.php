@@ -255,4 +255,119 @@ class OCCalendarSearchContext
         }
         return empty( $filter ) ? false : $filter;
     }
+    
+    public function parseResults( $rawResults, DateTime $startDateTime, DateTime $endDateTime = null )
+    {        
+        $events = array();
+        //$allEvents = array();
+        foreach( $rawResults as $rawResult )
+        {
+            $event = OCCalendarSearchResultItem::instance( $rawResult );
+            $events[] = $event;
+            //$allEvents[] = $event->toHash();
+        }
+        
+        $data = array();
+        $taxonomy = OCCalendarSearchTaxonomy::instance( 'what', $this );
+        if ( !$taxonomy instanceof OCCalendarSearchTaxonomy )
+        {                            
+            throw new Exception( "Taxonomy what not found" );
+        }
+        
+        $byDayEvents = $this->byDayEvents( $events, $startDateTime, $endDateTime );
+        foreach( $byDayEvents as $byDayEvent )
+        {
+            $byDayEventData = array(
+                'day' => $byDayEvent,
+                'tipo_evento' => array()
+            );
+            foreach( $taxonomy->getTree() as $taxonomyItem )
+            {
+                $byTaxonomyEvents = $this->byTaxonomyEvents( $byDayEvent->attribute( 'events' ), $taxonomyItem );
+                if ( !empty( $byTaxonomyEvents ) )
+                {                    
+                    $byTaxonomyEventsHash = array();
+                    foreach( $byTaxonomyEvents as $byTaxonomyEvent )
+                    {
+                        $byTaxonomyEventsHash[] = $byTaxonomyEvent->toHash();    
+                    }                    
+                    $byDayEventData['tipo_evento'][] = array(
+                        'id' => $taxonomyItem['id'],
+                        'name' => $taxonomyItem['name'],
+                        'events' => $byTaxonomyEventsHash
+                    );
+                }
+            }
+            if ( count( $byDayEventData['tipo_evento'] ) > 0 )
+            {
+                $data[] = $byDayEventData;
+            }
+        }
+        return $data;
+    }
+    
+    public function eventIsA( $event, $taxonomyItem )
+    {
+        if ( isset( $event['tipo_evento'] ) )
+        {
+            foreach( $event['tipo_evento'] as $tipo )
+            {
+                if ( $tipo['id'] == $taxonomyItem['id'] )
+                {
+                    return true;
+                }
+                if ( count( $taxonomyItem['children'] ) > 0 )
+                {
+                    foreach( $taxonomyItem['children'] as $child )
+                    {
+                        if ( $tipo['id'] == $child['id'] )
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    protected function byTaxonomyEvents( $events, $taxonomyItem )
+    {
+        $eventsByTaxonomy = array();
+        foreach( $events as $event )
+        {
+            if ( $this->eventIsA( $event, $taxonomyItem ) )
+            {
+                $eventsByTaxonomy[] = $event;
+            }
+        }
+        return $eventsByTaxonomy;
+    }
+    
+    protected function byDayEvents( $events, $startDateTime, $endDateTime )
+    {
+        $eventsByDay = array();        
+        if ( $endDateTime instanceof DateTime )
+        {
+            $byDayInterval = new DateInterval( 'P1D' );
+            $byDayPeriod = new DatePeriod( $startDateTime, $byDayInterval, $endDateTime );        
+        }
+        else
+        {
+            $byDayPeriod = array( $startDateTime );
+        }
+        foreach( $byDayPeriod as $date )
+        {
+            $identifier = $date->format( OCCalendarData::FULLDAY_IDENTIFIER_FORMAT );            
+            $calendarDay = new OCCalendarDay( $identifier );            
+            $calendarDay->addEvents( $events );
+            if ( count( $calendarDay->attribute( 'events' ) ) > 0 )
+            {
+                $eventsByDay[] = $calendarDay;            
+            }
+        }
+        
+        return $eventsByDay;
+    }
+    
 }

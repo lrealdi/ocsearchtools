@@ -20,7 +20,7 @@
                 <b class="caret"></b>
               </div>
               <ul class="list-inline" style="display: inline">
-                <li ng-repeat="current_date in current_dates">{{current_date}}</li>
+                <li>Trovati {{count}} risultati per  <span ng-repeat="current_date in current_dates">{{current_date}} </span></li>
               </ul>
             </div>
             <div class="col-md-3">
@@ -86,24 +86,27 @@
             </div>
           </div>                
         </div>
-        
-        <div class="row">
-          <div class="col-xs-12">
-            <em>Trovati {{count}} risultati</em>
+                
+        <div class="row" ng-repeat="item in events">
+          <div class="col-xs-2 col-sm-1 text-center">
+            <h2>{{item.day.day}}</h2>
+            <h3>{{item.day.month}}</h3>
           </div>
-          <div class="col-md-4" ng-repeat-start="item in events">
-            <h2>{{item.name}}</h2>
-            <p>
-              <span class="label label-default" ng-repeat="type in item.fields.subattr_tipo_evento___name____s">{{type}}</span>
-              <span class="label label-info" ng-repeat="where in item.fields.subattr_comune___name____s">{{where}}</span>
-              <span class="label label-warning" ng-repeat="target in item.fields.subattr_utenza_target___name____s">{{target}}</span>
-              <span class="label label-success" ng-repeat="tema in item.fields.subattr_tema___name____s">{{tema}}</span>
-            </p>
-            <em>{{item.main_url_alias}}</em>
-            <p>{{item.fields.attr_from_time_dt}} - {{item.fields.attr_to_time_dt}}</p>            
+          <div class="col-xs-10 col-sm-11">
+            <div ng-repeat="type in item.tipo_evento">
+              <h2>{{type.name}}</h2>
+              <div ng-repeat="event in type.events">
+                <h4><a href="{{event.href}}">{{event.name}}</a></h4>            
+                <p style="white-space: pre-wrap;">{{event.orario_svolgimento}}</p>
+                <p><strong ng-repeat="where in event.comune">{{where.name}}</strong> {{event.luogo_svolgimento}}</p>                        
+                <p>                                                
+                  <small ng-repeat="target in event.utenza_target">{{target.name}}</small>
+                  <small ng-repeat="tema in event.tema">{{tema.name}}</small>
+                </p>                    
+              </div>
+            </div>              
           </div>
-          <div class="clearfix" ng-if="$index%3==2"></div>
-          <div ng-repeat-end=""></div>
+          
         </div>
         
       </div>
