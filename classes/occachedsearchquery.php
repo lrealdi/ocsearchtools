@@ -8,7 +8,9 @@ class OCCachedSearchQuery extends OCSearchQuery
 
     public $queryText;
 
-    public $queryParameters = array(
+    public $queryParameters = array();
+    
+    protected $baseQueryParameters = array(
         'SearchOffset' => 0,
         'SearchLimit' => 1000,
         'Facet' => array(),
@@ -44,7 +46,7 @@ class OCCachedSearchQuery extends OCSearchQuery
     {
         $parameters = array(
             'queryText' => $this->queryText,
-            'queryParameters' => $this->queryParameters
+            'queryParameters' => array_merge( $this->baseQueryParameters, $this->queryParameters )
         );
         $currentSiteAccess = $GLOBALS['eZCurrentAccess']['name'];
         $copyParameters = $parameters;
@@ -54,8 +56,8 @@ class OCCachedSearchQuery extends OCSearchQuery
         $cacheFile = eZClusterFileHandler::instance( $cacheFilePath );
 
         return $cacheFile->processCache(
-            array( 'OCCalendarSearchQuery', 'retrieveCache' ),
-            array( 'OCCalendarSearchQuery', 'generateCache' ),
+            array( 'OCCachedSearchQuery', 'retrieveCache' ),
+            array( 'OCCachedSearchQuery', 'generateCache' ),
             null,
             null,
             compact( 'parameters' )

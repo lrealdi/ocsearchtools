@@ -8,7 +8,7 @@ OCCalendarServices
   }]);
 
 var OCCalendarApp = angular.module('OCCalendarApp', [
-    'daterangepicker', 'OCCalendarServices', 'localytics.directives'
+    'daterangepicker', 'OCCalendarServices'
 ]);
 
 OCCalendarApp.controller('CalendarCtrl', ['$scope','CalendarSearch', '$location',
@@ -56,6 +56,14 @@ OCCalendarApp.controller('CalendarCtrl', ['$scope','CalendarSearch', '$location'
       //}else if (key == 'when' && value == 'weekend') {
       //  $scope.selectedDateRange = {startDate: moment().day('Saturday'),endDate:moment().day("Saturday").add(1,'days')};
       //}
+      touched = true;
+      get();
+    }
+    
+    $scope.reset = function(key){
+      $scope.current[key] = null;
+      $scope.query[key] = null;
+      $scope.query['_'+key] = [];
       touched = true;
       get();
     }

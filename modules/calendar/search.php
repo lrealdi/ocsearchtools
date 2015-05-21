@@ -11,6 +11,7 @@ try
 {
     $searchContext = OCCalendarSearchContext::instance( $contextIdentifier, $contextParameters );
     $searchContext->setRequest( new OCCalendarSearchRequest( $_GET ) );
+    if ( $debug ) $searchContext->enableDebug();    
     $output = $searchContext->getData();
 }
 catch ( Exception $e )

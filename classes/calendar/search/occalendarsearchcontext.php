@@ -2,6 +2,8 @@
 
 abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterface
 {
+    protected $debug;
+    
     /**
      * @var string
      */
@@ -48,6 +50,7 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
             $instance = new $className( $contextIdentifier, $contextParameters );
             $queryHandler =  new OCCachedSearchQuery( $instance->getCacheKey() );
             $instance->setQueryHandler( $queryHandler );
+            return $instance;
         }
         throw new Exception( "SearchContext class for $contextIdentifier not found" );
     }
@@ -55,6 +58,11 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
     protected function __construct( $contextIdentifier, $contextParameters = array() )
     {
         $this->contextIdentifier = $contextIdentifier;
+    }
+    
+    public function enableDebug()
+    {
+        $this->debug = true;
     }
     
     public function getIdentifier()
@@ -92,9 +100,20 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
             'events' => $this->parseResults( $resultData['SearchResult'] ),
             'count' => $resultData['SearchCount']
         );
+        
+        if ( $this->debug )
+        {
+            $data['context'] = get_called_class();
+            $data['identifier'] = $this->getIdentifier();
+            $data['cache_key'] = $this->getCacheKey();
+            $data['debug'] = $this->queryHandler->queryParameters;            
+        }
+
+        
+        $data['query'] = $this->requestHandler->getRawRequest();
         $data['result'] = $result;
         $data['facets'] = $this->parseFacets( $resultData['FacetFields'] );
-
+        
         return $data;
     }
 
@@ -235,6 +254,24 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
      * @return array
      */
     abstract protected function getAlwaysDisplayTaxonomyIdentifiers();
+    
+    /**
+     * @return int[]
+     */
+    protected function getPerTaxonomyCurrentFacetsResult( $taxonomyIdentifier, $rawFacetsFields )
+    {
+        $currentFacetsResult = array();
+        foreach( $rawFacetsFields as $resultFacetGroup )
+        {
+            $currentFacetsResult = $currentFacetsResult + $resultFacetGroup['countList'];
+        }
+        return $currentFacetsResult;
+    }
+
+    protected function getTaxonomyIdentifiers()
+    {
+        return array( 'what', 'where', 'target', 'category' );
+    }
 
     public function getTaxonomyTree( $taxonomyIdentifier )
     {        
@@ -386,27 +423,23 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
     }
 
     public function parseFacets( $rawFacetsFields )
-    {        
-        $currentFacetsResult = array();
-        foreach( $rawFacetsFields as $resultFacetGroup )
-        {
-            $currentFacetsResult = $currentFacetsResult + $resultFacetGroup['countList'];
-        }
+    {
         $facets = array();
-        $taxonomyIdentifiers = array( 'what', 'where', 'target', 'category' );
+        $taxonomyIdentifiers = $this->getTaxonomyIdentifiers();
         $forceTaxonomyIdentifiers = $this->getAlwaysDisplayTaxonomyIdentifiers();
         foreach( $taxonomyIdentifiers as $taxonomyIdentifier )
         {
             $taxonomy = OCCalendarSearchTaxonomy::instance( $taxonomyIdentifier, $this );
             if ( $taxonomy instanceof OCCalendarSearchTaxonomy )
             {
+                $currentFacetsResult = $this->getPerTaxonomyCurrentFacetsResult( $taxonomyIdentifier, $rawFacetsFields );
                 $facets[$taxonomyIdentifier] = array();
                 foreach( $taxonomy->getTree() as $item )
                 {
                     $facetItem = $this->parseFacetItem( $item, $currentFacetsResult );
                     if( in_array( $taxonomyIdentifier, $forceTaxonomyIdentifiers ) )
                     {
-                        $item['is_selectable'] = $facetItem != false;
+                        $item['is_selectable'] = intval( $facetItem != false );
                         $facets[$taxonomyIdentifier][] = $item;
                     }
                     elseif ( $facetItem )
@@ -414,7 +447,8 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
                         $item['is_selectable'] = 1;
                         $facets[$taxonomyIdentifier][] = $facetItem;
                     }
-                    elseif ( isset( $parsedRequest[ $taxonomyIdentifier ] ) && in_array( $item['id'], $parsedRequest[ $taxonomyIdentifier ] ) )
+                    elseif ( $this->requestHandler->has( $taxonomyIdentifier )
+                             && in_array( $item['id'], $this->requestHandler->get( $taxonomyIdentifier ) ) )
                     {
                         $children = array();
                         if ( $item['children'] > 0 )
@@ -425,6 +459,10 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
                                 if ( $childItem )
                                 {
                                     $children[] = $childItem;
+                                }
+                                elseif( in_array( $child['id'], $this->requestHandler->get( $taxonomyIdentifier ) ) )
+                                {
+                                    $children[] = $child;
                                 }
                             }
                             $item['children'] = $children;

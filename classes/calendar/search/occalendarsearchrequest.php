@@ -27,6 +27,11 @@ class OCCalendarSearchRequest
     {
         return $this->request[$key];
     }
+    
+    public function getRawRequest()
+    {
+        return $this->rawRequest;
+    }
 
     protected function parse()
     {

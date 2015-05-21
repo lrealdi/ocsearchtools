@@ -33,6 +33,6 @@ tags[]=calendarquery
 tags[]=content
 path=calendarquery
 isClustered=true
-class=OCCalendarSearchQuery
+class=OCCachedSearchQuery
 
 */?>
