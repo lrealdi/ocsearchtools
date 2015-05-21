@@ -2,53 +2,241 @@
 
 abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterface
 {
-    
+    /**
+     * @var string
+     */
     protected $contextIdentifier;
-        
-    protected $solrBaseFields = array();
 
-    protected $taxonomyFetchParams = array();
+    /**
+     * @var OCCachedSearchQuery
+     */
+    protected $queryHandler;
 
-    protected $taxonomyFetchRootNodeId = array();
+    /**
+     * @var OCCalendarSearchRequest
+     */
+    protected $requestHandler;
 
-    protected $solrFetchParams = array();
-    
-    public $forceTaxonomyIdentifiers = array();
-    
-    public $parsedRequest = array();
-    
-    final public static function instance( $contextIdentifier, $contextParameters = array(), $request = array() )
+    /**
+     * @var DateTime
+     */
+    protected $startDateTime;
+
+    /**
+     * @var DateTime
+     */
+    protected $endDateTime;
+
+    /**
+     * @var string
+     */
+    public $dateTimeFormat = 'd/m/Y';
+
+    /**
+     * @param $contextIdentifier
+     * @param array $contextParameters
+     * @return OCCalendarSearchContextInterface
+     * @throws Exception
+     */
+    final public static function instance( $contextIdentifier, $contextParameters = array() )
     {
         $ini = eZINI::instance( 'ocsearchtools.ini' );
         if ( $ini->hasVariable( 'CalendarSearchContext_' . $contextIdentifier, 'SearchContext' ) )
         {
             $className = $ini->variable( 'CalendarSearchContext_' . $contextIdentifier, 'SearchContext' );
-            return new $className( $contextIdentifier, $contextParameters, $request );
+            /** @var OCCalendarSearchContextInterface $instance */
+            $instance = new $className( $contextIdentifier, $contextParameters );
+            $queryHandler =  new OCCachedSearchQuery( $instance->getCacheKey() );
+            $instance->setQueryHandler( $queryHandler );
         }
         throw new Exception( "SearchContext class for $contextIdentifier not found" );
     }
+
+    protected function __construct( $contextIdentifier, $contextParameters = array() )
+    {
+        $this->contextIdentifier = $contextIdentifier;
+    }
     
-    public function identifier()
+    public function getIdentifier()
     {
         return $this->contextIdentifier;
     }
 
-    public function cacheKey()
+    public function getCacheKey()
     {
         return $this->contextIdentifier;
     }
     
-    public function taxonomiesCacheKey()
+    public function getTaxonomiesCacheKey()
     {
         return 'calendar_taxonomy';
-    } 
-    
-    public function solrFetchParams()
-    {
-        return $this->solrFetchParams;
     }
-    
-    public function taxonomyTree( $taxonomyIdentifier )
+
+    public function setRequest( OCCalendarSearchRequest $request )
+    {
+        $this->requestHandler = $request;
+    }
+
+    public function setQueryHandler( OCSearchQuery $queryHandler )
+    {
+        $this->queryHandler = $queryHandler;
+    }
+
+    final public function getData()
+    {
+        $data = array();
+        $this->parseRequest();
+        $resultData = $this->queryHandler->fetch();
+        $result = array(
+            'current_dates' => $this->getDateHash(),
+            'events' => $this->parseResults( $resultData['SearchResult'] ),
+            'count' => $resultData['SearchCount']
+        );
+        $data['result'] = $result;
+        $data['facets'] = $this->parseFacets( $resultData['FacetFields'] );
+
+        return $data;
+    }
+
+    public function getStartDateTime()
+    {
+        return $this->startDateTime;
+    }
+
+    public function getEndDateTime()
+    {
+        return $this->endDateTime;
+    }
+
+    public function getDateHash()
+    {
+        $date = array();
+        if ( $this->startDateTime instanceof DateTime )
+        {
+            $date[] = $this->startDateTime->format( $this->dateTimeFormat );
+
+            if ( $this->endDateTime instanceof DateTime )
+            {
+                if ( $this->endDateTime->format( $this->dateTimeFormat ) != $this->startDateTime->format( $this->dateTimeFormat ) )
+                {
+                    $date[] = $this->endDateTime->format( $this->dateTimeFormat );
+                }
+            }
+        }
+        return $date;
+    }
+
+    protected function parseRequest()
+    {
+        if ( $this->requestHandler->has( 'text' ) )
+        {
+            $this->queryHandler->queryText = $this->requestHandler->get( 'text' );
+        }
+
+        if ( $this->requestHandler->has( 'when' ) )
+        {
+            $this->queryHandler->addQueryFilter( $this->getDateFilter( $this->requestHandler->get( 'when' ) ) );
+        }
+
+        if ( $this->requestHandler->has( 'what' ) )
+        {
+            $this->queryHandler->addQueryFilter( $this->getTaxonomyFilter( $this->requestHandler->get( 'what' ), 'what' ) );
+        }
+
+        if ( $this->requestHandler->has( 'where' ) )
+        {
+            $this->queryHandler->addQueryFilter( $this->getTaxonomyFilter( $this->requestHandler->get( 'where' ), 'where' ) );
+        }
+
+        if ( $this->requestHandler->has( 'target' ) )
+        {
+            $this->queryHandler->addQueryFilter( $this->getTaxonomyFilter( $this->requestHandler->get( 'target' ), 'target' ) );
+        }
+
+        if ( $this->requestHandler->has( 'category' ) )
+        {
+            $this->queryHandler->addQueryFilter( $this->getTaxonomyFilter( $this->requestHandler->get( 'category' ), 'category' ) );
+        }
+    }
+
+    protected function getDateFilter( $dateArray )
+    {
+        $this->startDateTime = array_shift( $dateArray );
+        $this->endDateTime = array_shift( $dateArray );;
+        if ( $this->endDateTime == null )
+        {
+            $this->endDateTime = clone $this->startDateTime;
+        }
+
+        $this->startDateTime->setTime( 0, 0 );
+        $this->endDateTime->setTime( 23, 59 );
+
+        //ezfSolrDocumentFieldBase::preProcessValue( $start->format( 'U' ), 'date' );
+        $startSolr = strftime(
+            '%Y-%m-%dT%H:%M:%SZ',
+            $this->startDateTime->format( 'U' )
+        );
+
+        //ezfSolrDocumentFieldBase::preProcessValue( $end->format( 'U' ) - 1 , 'date' );
+        $endSolr = strftime(
+            '%Y-%m-%dT%H:%M:%SZ',
+            $this->endDateTime->format( 'U' )
+        );
+
+        return array(
+            'or',
+            'attr_from_time_dt:[' . $startSolr . ' TO ' . $endSolr . ']',
+            'attr_to_time_dt:[' . $startSolr . ' TO ' . $endSolr . ']',
+            array(
+                'and',
+                'attr_from_time_dt:[* TO ' . $startSolr . ']',
+                'attr_to_time_dt:[' . $endSolr . ' TO *]'
+            )
+        );
+    }
+
+    protected function getTaxonomyFilter( $data, $taxonomyIdentifier )
+    {
+        $filter = array();
+        $taxonomy = OCCalendarSearchTaxonomy::instance( $taxonomyIdentifier, $this );
+        foreach( $data as $taxonomyId )
+        {
+            $item = $taxonomy->getItem( $taxonomyId );
+            if ( $item )
+            {
+                $filter[] = $item['solr_filter'];
+            }
+        }
+        return empty( $filter ) ? false : $filter;
+    }
+
+    /**
+     * @param $taxonomyIdentifier
+     *
+     * @return array
+     */
+    abstract protected function getTaxonomyFetchParameters( $taxonomyIdentifier );
+
+    /**
+     * @param $taxonomyIdentifier
+     *
+     * @return int
+     */
+    abstract protected function getTaxonomyFetchRootNodeId( $taxonomyIdentifier );
+
+    /**
+     * @param $taxonomyIdentifier
+     *
+     * @return array
+     */
+    abstract protected function getTaxonomySolrBaseFields( $taxonomyIdentifier );
+
+    /**
+     * @return array
+     */
+    abstract protected function getAlwaysDisplayTaxonomyIdentifiers();
+
+    public function getTaxonomyTree( $taxonomyIdentifier )
     {        
         switch( $taxonomyIdentifier )
         {
@@ -57,7 +245,10 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
             case 'target':
             case 'category':
                 $data = array();
-                $nodes = eZContentObjectTreeNode::subTreeByNodeID( $this->taxonomyFetchParams[$taxonomyIdentifier], $this->taxonomyFetchRootNodeId[$taxonomyIdentifier] );
+                $nodes = eZContentObjectTreeNode::subTreeByNodeID(
+                    $this->getTaxonomyFetchParameters( $taxonomyIdentifier ),
+                    $this->getTaxonomyFetchRootNodeId( $taxonomyIdentifier )
+                );
                 foreach( $nodes as $node )
                 {
                     $data[] = $this->walkTaxonomyItem( $node, $taxonomyIdentifier );
@@ -66,20 +257,6 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
             break;
         }
         return false;
-    }
-    
-    public function getSolrFilters( array $data, OCCalendarSearchTaxonomy $taxonomy )
-    {
-        $filter = array();        
-        foreach( $data as $taxonomyId )
-        {
-            $item = $taxonomy->getItem( $taxonomyId );
-            if ( $item )
-            {
-                $filter[] = $item['solr_filter'];
-            }        
-        }
-        return empty( $filter ) ? false : $filter;
     }
 
     /**
@@ -102,21 +279,25 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
             'children' => array()
         );
         $solrIdFields = array();
-        if ( $this->solrBaseFields[$taxonomyIdentifier][$node->attribute( 'class_identifier' )] )
+        $baseFields = $this->getTaxonomySolrBaseFields( $taxonomyIdentifier );
+        if ( $baseFields[$node->attribute( 'class_identifier' )] )
         {
-            foreach( $this->solrBaseFields[$taxonomyIdentifier][$node->attribute( 'class_identifier' )] as $baseField )
+            foreach( $baseFields[$node->attribute( 'class_identifier' )] as $baseField )
             {
                 $solrIdFields[] = "submeta_{$baseField}___id____si";
             }
         }
 
         /** @var eZContentObjectTreeNode[] $children */
-        $children = eZContentObjectTreeNode::subTreeByNodeID( $this->taxonomyFetchParams[$taxonomyIdentifier], $node->attribute( 'node_id' ) );
+        $children = eZContentObjectTreeNode::subTreeByNodeID(
+            $this->getTaxonomyFetchParameters( $taxonomyIdentifier ),
+            $node->attribute( 'node_id' )
+        );
         $parentFields = array();
         foreach( $children as $child )
         {
             $item['children'][] = $this->walkTaxonomyItem( $child, $taxonomyIdentifier );
-            foreach( $this->solrBaseFields[$taxonomyIdentifier][$child->attribute( 'class_identifier' )] as $baseField )
+            foreach( $baseFields[$child->attribute( 'class_identifier' )] as $baseField )
             {
                 $parentFields[] = "submeta_{$baseField}___path____si";
             }
@@ -204,7 +385,7 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
         return $facetItem;
     }
 
-    public function parseFacets( array $rawFacetsFields, array $parsedRequest )
+    public function parseFacets( $rawFacetsFields )
     {        
         $currentFacetsResult = array();
         foreach( $rawFacetsFields as $resultFacetGroup )
@@ -213,7 +394,7 @@ abstract class OCCalendarSearchContext implements OCCalendarSearchContextInterfa
         }
         $facets = array();
         $taxonomyIdentifiers = array( 'what', 'where', 'target', 'category' );
-        $forceTaxonomyIdentifiers = $this->forceTaxonomyIdentifiers;
+        $forceTaxonomyIdentifiers = $this->getAlwaysDisplayTaxonomyIdentifiers();
         foreach( $taxonomyIdentifiers as $taxonomyIdentifier )
         {
             $taxonomy = OCCalendarSearchTaxonomy::instance( $taxonomyIdentifier, $this );

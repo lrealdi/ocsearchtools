@@ -7,19 +7,21 @@ $debug = isset( $_GET['_debug'] );
 $contextIdentifier = $Params['ContextIdentifier'];
 $contextParameters = $Params['UserParameters'];
 
-$query = OCCalendarSearchQuery::instance( $_GET, $contextIdentifier, $contextParameters );
-$data = OCCalendarSearch::instance( $query );
-
-$output = array(
-    'query' => $data->query(),
-    'result' => $data->result(),
-    'facets' => $data->facets()    
-);
+try
+{
+    $searchContext = OCCalendarSearchContext::instance( $contextIdentifier, $contextParameters );
+    $searchContext->setRequest( new OCCalendarSearchRequest( $_GET ) );
+    $output = $searchContext->getData();
+}
+catch ( Exception $e )
+{
+    $output = array( 'error' => $e->getMessage() );
+}
 
 if ( $debug )
 {
     echo '<pre>';    
-    $output['solrData'] = $data->solrData();
+    //$output['solrData'] = $data->solrData();
     print_r($output);
     eZDisplayDebug();
 }

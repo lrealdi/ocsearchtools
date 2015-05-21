@@ -1,6 +1,6 @@
 <?php
 
-class OCCalendarSearchResultItem extends OCCalendarItem implements ArrayAccess, OCCalendarSearchResultItemInterface
+abstract class OCCalendarSearchResultItem extends OCCalendarItem implements ArrayAccess, OCCalendarSearchResultItemInterface
 {
     
     protected $rawResult;
@@ -17,7 +17,7 @@ class OCCalendarSearchResultItem extends OCCalendarItem implements ArrayAccess, 
     {
         $ini = eZINI::instance( 'ocsearchtools.ini' );
         $className = 'OCCalendarSearchResultItem';
-        $contextIdentifier = $context->identifier();
+        $contextIdentifier = $context->getIdentifier();
         if ( $ini->hasVariable( 'CalendarSearchContext_' . $contextIdentifier, 'SearchResultItem' ) )
         {
             $className = $ini->variable( 'CalendarSearchContext_' . $contextIdentifier, 'SearchResultItem' );
@@ -105,6 +105,7 @@ class OCCalendarSearchResultItem extends OCCalendarItem implements ArrayAccess, 
     {
         return $this->data;
     }
-    
+
+    abstract public function isA( $type );
        
 }

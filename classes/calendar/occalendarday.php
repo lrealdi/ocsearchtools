@@ -171,6 +171,7 @@ class OCCalendarDay implements ArrayAccess
             }
         }
         eZDebug::writeNotice( "Attribute $key does not exist" );
+        return false;
     }
     
     public function offsetSet($offset, $value) {

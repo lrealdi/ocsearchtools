@@ -2,20 +2,22 @@
 
 interface OCCalendarSearchContextInterface
 {
-    public function identifier();
+    public function getIdentifier();
 
-    public function solrFetchParams();
+    public function getCacheKey();
 
-    public function taxonomiesCacheKey();
-    
-    public function cacheKey();
+    public function getTaxonomiesCacheKey();
 
-    public function parseResults( array $rawResults, DateTime $startDateTime, DateTime $endDateTime = null );
+    public function setRequest( OCCalendarSearchRequest $request );
 
-    public function parseFacets( array $rawFacetsFields, array $parsedRequest );
+    public function setQueryHandler( OCSearchQuery $query );
 
-    public function getSolrFilters( array $data, OCCalendarSearchTaxonomy $taxonomy );
+    public function getData();
 
-    public function taxonomyTree( $taxonomyIdentifier );
+    public function parseResults( $results );
+
+    public function parseFacets( $facets );
+
+    public function getTaxonomyTree( $taxonomyIdentifier );
 
 }
