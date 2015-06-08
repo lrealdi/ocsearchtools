@@ -60,7 +60,7 @@ OCCalendarApp.controller('CalendarCtrl', ['$scope','CalendarSearch', '$location'
       get();
     }
     
-    $scope.reset = function(key){
+    $scope.reset = function(key){      
       $scope.current[key] = null;
       $scope.query[key] = null;
       $scope.query['_'+key] = [];
