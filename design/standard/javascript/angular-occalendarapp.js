@@ -66,7 +66,7 @@ OCCalendarApp.controller('CalendarCtrl', ['$scope','CalendarSearch', '$location'
       $scope.query['_'+key] = [];
       touched = true;
       get();
-    }
+    }    
     
     $scope.update = function(key){      
       if ($scope.current[key] && typeof $scope.current[key] == 'object') {
