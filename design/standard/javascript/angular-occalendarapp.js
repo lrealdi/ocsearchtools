@@ -90,13 +90,7 @@ OCCalendarApp.controller('CalendarCtrl', ['$scope','CalendarSearch', '$location'
     
     $scope.needReset = function(){
       return touched == true;
-    }
-    
-    $scope.reset = function(){
-      $scope.query = jQuery.extend(true, {}, OCCalendarAppBaseQuery );
-      touched = false;
-      get();
-    }
+    }  
     
     var getItem = function (key,id){
       if ($scope[key].length > 0) {
