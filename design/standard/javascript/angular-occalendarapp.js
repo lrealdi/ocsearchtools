@@ -174,7 +174,8 @@ OCCalendarApp.controller('CalendarCtrl', ['$scope','CalendarSearch', '$location'
     $scope.current_dates = [];
     $scope.selectedDateRange = {startDate: null,endDate:null};
     $scope.dateRangeOpts = angular.isObject(OCCalendarAppConfig.dateRangeOptions) ? OCCalendarAppConfig.dateRangeOptions :{};
-    $scope.$watch('selectedDateRange', function(newDate,oldDate) {      
+    $scope.dateRangeOpts.timeZone = '0';
+    $scope.$watch('selectedDateRange', function(newDate,oldDate) {
       if (newDate.startDate != null) {
         $scope.query.when = 'range';
         var startDate = moment( $scope.selectedDateRange.startDate );
