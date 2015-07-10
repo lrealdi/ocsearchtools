@@ -459,13 +459,16 @@ class OCClassTools
             {
                 throw new Exception( $original->error );
             }
+            if ( $original === null )
+            {
+                throw new Exception( "Errore interrogando '$originalRepositoryUrl''" );
+            }
             return $original;             
         }
         else
         {
             throw new Exception( "Server e client non possono coincidere" );   
         }
-        return null;
     }
     
     protected function compareProperties( $remote = null )
