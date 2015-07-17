@@ -18,7 +18,7 @@ $iDisplayLength = $http->hasGetVariable( 'iDisplayLength' ) ? $http->getVariable
 /*
  * Ordering
  */
-$sortBy = array( eZSolr::getMetaFieldName( 'sort_name', 'sort' ) => 'asc' );
+$sortBy = array( ezfSolrDocumentFieldBase::generateMetaFieldName( 'sort_name' ) => 'asc' );
 if ( $http->hasGetVariable( 'iSortCol_0' ) )
 {    
     for ( $i=0 ; $i<intval( $http->getVariable( 'iSortingCols' ) ); $i++ )
@@ -26,7 +26,12 @@ if ( $http->hasGetVariable( 'iSortCol_0' ) )
         $sortBy = array();
         if ( $http->getVariable( 'bSortable_'.intval( $http->getVariable( 'iSortCol_'.$i) ) ) == "true" )
         {
-            $sortBy[] = array( $fields[ intval( $http->getVariable( 'iSortCol_' . $i ) ) ], $http->getVariable( 'sSortDir_' . $i ) );             
+            $sortKey = $fields[ intval( $http->getVariable( 'iSortCol_' . $i ) ) ];
+            if ( $sortKey == 'name_t' || $sortKey == 'name' )
+            {
+                $sortKey = ezfSolrDocumentFieldBase::generateMetaFieldName( 'sort_name' );
+            }
+            $sortBy[] = array( $sortKey, $http->getVariable( 'sSortDir_' . $i ) );             
         }
     }
 }
