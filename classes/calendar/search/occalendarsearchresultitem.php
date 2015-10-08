@@ -6,6 +6,8 @@ abstract class OCCalendarSearchResultItem extends OCCalendarItem implements Arra
     protected $rawResult;
 
     protected $data;
+    
+    protected $context;
 
     /**
      * @param array $rawResult
@@ -26,12 +28,13 @@ abstract class OCCalendarSearchResultItem extends OCCalendarItem implements Arra
         {
             $className = $ini->variable( 'CalendarSearchHandlers', 'SearchResultItem' );
         }
-        return new $className( $rawResult );
+        return new $className( $rawResult, $context );
     }
     
-    protected function __construct( array $rawResult )
+    protected function __construct( array $rawResult, OCCalendarSearchContext $context )
     {
         $this->rawResult = $rawResult;
+        $this->context = $context;
         $this->parse();
     }
 
