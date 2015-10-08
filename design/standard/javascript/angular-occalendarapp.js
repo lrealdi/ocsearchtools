@@ -48,16 +48,24 @@ OCCalendarApp.controller('CalendarCtrl', ['$scope','CalendarSearch', '$location'
         }        
       }else{
         $scope.query[key] = value;
+      }      
+      if (key == 'when' && value == 'today') {        
+        getPicker().setStartDate(moment());
+        getPicker().setEndDate(moment());
+        getPicker().hideCalendars();
+      }else if (key == 'when' && value == 'tomorrow') {
+        getPicker().setStartDate(moment().add(1,'days'));
+        getPicker().setEndDate(moment().add(1,'days'));        
+      }else if (key == 'when' && value == 'weekend') {
+        getPicker().setStartDate(moment().day('Saturday'));
+        getPicker().setEndDate(moment().day("Saturday").add(1,'days'));        
       }
-      //if (key == 'when' && value == 'today') {
-      //  $scope.selectedDateRange = {startDate: moment(),endDate:moment()};
-      //}else if (key == 'when' && value == 'tomorrow') {
-      //  $scope.selectedDateRange = {startDate: moment().add(1,'days'),endDate:moment().add(1,'days')};
-      //}else if (key == 'when' && value == 'weekend') {
-      //  $scope.selectedDateRange = {startDate: moment().day('Saturday'),endDate:moment().day("Saturday").add(1,'days')};
-      //}
       touched = true;
       get();
+    }
+    
+    getPicker = function(){
+        return angular.element('#selectedDateRange').data('daterangepicker');
     }
     
     $scope.reset = function(key){      
@@ -177,10 +185,10 @@ OCCalendarApp.controller('CalendarCtrl', ['$scope','CalendarSearch', '$location'
     $scope.dateRangeOpts.timeZone = '0';
     $scope.$watch('selectedDateRange', function(newDate,oldDate) {
       if (newDate.startDate != null) {
-        $scope.query.when = 'range';
+        $scope.query.when = 'range';        
         var startDate = moment( $scope.selectedDateRange.startDate );
-        var endDate = moment( $scope.selectedDateRange.endDate );        
-        $scope.query.dateRange = [startDate.format('YYYYMMDD'),endDate.format('YYYYMMDD')];
+        var endDate = moment( $scope.selectedDateRange.endDate ).subtract(3,'hour');        
+        $scope.query.dateRange = [startDate.format('YYYYMMDD'),endDate.format('YYYYMMDD')];        
         get();
       }
     }, false);
