@@ -11,11 +11,17 @@ class OCClassTools
     public $EditLanguage = 'ita-IT';
     
     protected $id, $identifier;
+    /**
+     * @var eZContentClass
+     */
     protected $currentClass;
     protected $options;
     protected $remoteClass;
     protected $notifications = array();
     protected $data;
+    /**
+     * @var eZContentClassAttribute[]
+     */
     protected $extraContentObjectAttributes = array();
     protected $extraContentObjectAttributesDetails = array();
     
@@ -242,6 +248,7 @@ class OCClassTools
             {
                 throw new Exception( "La classe non esiste" );
             }
+            /** @var eZContentClassClassGroup[] $classGroups */
             $classGroups = eZContentClassClassGroup::fetchGroupList( $this->id, eZContentClass::VERSION_STATUS_DEFINED );
             foreach ( $classGroups as $classGroup )
             {
@@ -262,6 +269,7 @@ class OCClassTools
             $contentIni = eZINI::instance( 'content.ini' );
             $timeOut = $contentIni->variable( 'ClassSettings', 'DraftTimeout' );
     
+            /** @var eZContentClassClassGroup[] $groupList */
             $groupList = $temporary->fetchGroupList();
             if ( count( $groupList ) > 0 )
             {
@@ -276,9 +284,11 @@ class OCClassTools
             }
         }
         
+        /** @var eZContentClassAttribute[] $localeAttributes */
         $localeAttributes = array();
         foreach( $this->currentClass->fetchAttributes() as $attribute )
         {
+            /** @var eZContentClassAttribute $attribute */
             $attribute->setAttribute( 'version', eZContentClass::VERSION_STATUS_TEMPORARY );
             $localeAttributes[$attribute->attribute('identifier')] = $attribute;
         }
@@ -447,7 +457,13 @@ class OCClassTools
         $db->commit();
         return $class;
     }
-    
+
+    /**
+     * @param $identifier
+     *
+     * @return stdClass
+     * @throws Exception
+     */
     protected static function fetchRemoteByIdentifier( $identifier )
     {
         $currentUrl = eZINI::instance()->variable( 'SiteSettings', 'SiteURL' );
@@ -459,10 +475,7 @@ class OCClassTools
             {
                 throw new Exception( $original->error );
             }
-            if ( $original === null )
-            {
-                throw new Exception( "Errore interrogando '$originalRepositoryUrl''" );
-            }
+
             return $original;             
         }
         else
@@ -496,6 +509,7 @@ class OCClassTools
             }
         }
         
+        /** @var eZContentClassClassGroup[] $localGroups */
         $localGroups = $locale->fetchGroupList();
         $localGroupsNames = array();
         $remoteGroupsNames = array();
@@ -530,6 +544,7 @@ class OCClassTools
             throw new Exception( "Classe remota non trovata" );
         }
         $locale = $this->currentClass;
+        /** @var eZContentClassAttribute[] $localeDataMap */
         $localeDataMap = $locale->attribute( 'data_map' );
         foreach( $remote->DataMap[0] as $originalAttribute )
         {
@@ -562,6 +577,7 @@ class OCClassTools
                 {
                     $missingInOriginal[] = json_decode( json_encode( $attribute ) );
                     $this->extraContentObjectAttributes[] = $attribute;                    
+                    /** @var eZContentObjectAttribute[] $contentAttributes */
                     $contentAttributes = eZContentObjectAttribute::fetchSameClassAttributeIDList( $attribute->attribute( 'id' ), true );
                     $contents = array();
                     foreach( $contentAttributes as $contentAttribute )
@@ -597,7 +613,7 @@ class OCClassTools
                 if ( $localeAttribute->attribute( $localeIdentifier ) != $originalAttribute->{ $remoteProperty } )
                 {
                     $this->notifications[$this->notificationLevel[$localeIdentifier]][$id] = $localeIdentifier;
-                    $detail = false;
+                    /** @var eZContentObjectAttribute[] $contentAttributes */
                     $contentAttributes = eZContentObjectAttribute::fetchSameClassAttributeIDList( $localeAttribute->attribute( 'id' ), true );
                     $contents = array();
                     foreach( $contentAttributes as $contentAttribute )
@@ -660,7 +676,7 @@ class OCClassTools
 
             $localeAttribute->store();
             
-            ezpEvent::getInstance()->notify( 'classtools/post_sync_class_attribute', array( $localeAttribute, $originalAttribute ) );
+            ezpEvent::getInstance()->notify( 'classtools/post_sync_class_attribute', array( $localeAttribute, $originalAttribute, $isModified ) );
             
             return $localeAttribute;
         }
@@ -670,12 +686,12 @@ class OCClassTools
     protected function addAttribute( $originalAttribute )
     {
         $class = $this->currentClass;
-        $ClassID = $class->ID;        
         $localeAttributes = $class->fetchAttributes();
         $placement = count( $localeAttributes );
                  
         if( !$class->fetchAttributeByIdentifier( $originalAttribute->Identifier ) )
         {
+            /** @var eZContentClassAttribute $localeAttribute */
             $localeAttribute = eZContentClassAttribute::create(
                 $class->attribute( 'id' ),
                 $originalAttribute->DataTypeString,
@@ -696,12 +712,17 @@ class OCClassTools
             {
                 $localeAttribute->setAttribute( $localeIdentifier, $originalAttribute->{ $remoteProperty } );
             }
-            $store = $localeAttribute->store();
+            $localeAttribute->store();
             return $localeAttribute;
         }
         return false;
     }
-    
+
+    /**
+     * @param stdClass $remote
+     *
+     * @throws Exception
+     */
     protected function syncAllGroups( $remote = null)
     {
         if ( $remote === null )
@@ -732,11 +753,13 @@ class OCClassTools
         }
         $this->syncAllGroups( $remote );        
         $locale = $this->currentClass;
+        /** @var eZContentClassClassGroup[] $localGroups */
         $localGroups = $locale->fetchGroupList();
-        $localGroupsNames = array();
-        $remoteGroupsNames = array();
+        //$localGroupsNames = array();
+        //$remoteGroupsNames = array();
         foreach ( $localGroups as $group )
         {
+            /** @var eZContentClassGroup $classGroup */
             $classGroup = eZContentClassGroup::fetchByName( $group->attribute( 'group_name' ) );
             if ( $classGroup )
             {
@@ -747,6 +770,7 @@ class OCClassTools
         }
         foreach ( $remote->InGroups as $group )
         {
+            /** @var eZContentClassGroup $classGroup */
             $classGroup = eZContentClassGroup::fetchByName( $group->GroupName );
             if ( $classGroup )
             {
@@ -763,9 +787,14 @@ class OCClassTools
         //    //@todo
         //}
     }
-    
+
+    /**
+     * @param eZContentClassAttribute $localeAttribute
+     * @param string $newDataTypeString
+     */
     protected function changeContentObjectAttributeDataTypeString( $localeAttribute, $newDataTypeString )
     {
+        /** @var eZContentObjectAttribute[] $contentAttributes */
         $contentAttributes = eZContentObjectAttribute::fetchSameClassAttributeIDList( $localeAttribute->attribute( 'id' ), true );
         foreach( $contentAttributes as $attribute )
         {
