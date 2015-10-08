@@ -1,5 +1,5 @@
 <?php
-
+/** @var eZModule $module */
 $module = $Params['Module'];
 $tpl = eZTemplate::factory();
 $http = eZHTTPTool::instance();
@@ -13,7 +13,7 @@ try
     if ( OCCrossSearch::isAvailableRepository( $repositoryID ) )
     {
         $repository = OCCrossSearch::instanceRepository( $repositoryID );
-        
+       
         if ( $http->hasPostVariable( 'SelectedNodeIDArray' ) and
              $http->postVariable( 'BrowseActionName' ) == 'FindRepositoryImportParentNode' and
              !$http->hasPostVariable( 'BrowseCancelButton' ) )
@@ -30,12 +30,79 @@ try
             return;
         }
         
-        $newObject = $repository->import( $repositoryNodeID, $localParentNodeID );
+        // ::: EDIT by SZ :::
+        $ini = eZINI::instance( 'ocrepository.ini' );
+
+        if ( $ini->hasVariable( 'Client_' . $repositoryID, 'AskTagTematica' )
+             && $ini->variable(
+                'Client_' . $repositoryID,
+                'AskTagTematica'
+            ) == 'true'
+        )
+        {
+
+            $tagIDs = "";
+            $tagKeywords = "";
+            $tagParents = "";
+
+            if ( !$http->hasPostVariable( 'SelectTags' ) )
+            {
+                $tpl->setVariable(
+                    'fromPage',
+                    '/repository/import/' . $repositoryID . '/' . $repositoryNodeID
+                );
+                $tpl->setVariable( 'localParentNodeID', $localParentNodeID );
+
+                $Result['content'] = $tpl->fetch( 'design:repository/eztagschooser.tpl' );
+                $Result['path'] = array(
+                    array(
+                        'url' => false,
+                        'text' => 'Scegli Tag'
+                    )
+                );
+
+                return;
+            }
+            else
+            {
+                foreach ( $_POST as $post_key => $post_val )
+                {
+                    if ( substr( $post_key, 0, 8 ) == 'tematica' )
+                    {
+                        $tematica = explode( ";", $post_val );
+
+                        $tagIDs .= $tematica[0] . '|#';
+                        $tagKeywords .= $tematica[1] . '|#';
+                        $tagParents .= $tematica[2] . '|#';
+                    }
+                }
+            }
+            $newObject = $repository->import( $repositoryNodeID, $localParentNodeID );
+
+            foreach ( $newObject->contentObjectAttributes() as $attribute )
+            {
+                if ( $attribute->contentClassAttributeIdentifier() == 'tematica' )
+                {
+                    $eZTags = new eZTags();
+
+                    $eZTags->createFromStrings( $tagIDs, $tagKeywords, $tagParents );
+                    $eZTags->store( $attribute );
+
+                    break;
+                }
+            }
+        }
+        else
+        {
+            $newObject = $repository->import( $repositoryNodeID, $localParentNodeID );
+        }
+        // ::: :::
+        
         $module->redirectTo( $newObject->attribute( 'main_node' )->attribute( 'url_alias' ) );        
     }
     else
     {
-        return $module->redirect( 'repository/client' );
+        $module->redirectTo( 'repository/client' );
     }
     
 }
