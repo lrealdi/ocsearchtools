@@ -1,6 +1,6 @@
 {ezcss_require( array( 'plugins/table-calendar.css' ) )}
 {def $calendarData = calendar( $node, $view_parameters|merge( hash( 'interval', 'P1M', 'view', 'calendar' ) ) ) }
-
+{* commento a cazzo *}
 {def $curr_ts = currentdate()
      $curr_today = $calendarData.parameters.current_day
      $curr_year = $calendarData.parameters.current_year

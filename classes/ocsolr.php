@@ -4,6 +4,11 @@
 class OCSolr extends eZSolr
 {
 
+    function modificaInutile()
+    {
+
+    }
+
     function search( $searchText, $params = array(), $searchTypes = array() )
     {
         eZDebug::createAccumulator( 'Search', 'eZ Find' );
